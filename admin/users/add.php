@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Handle file upload
             $image = 'default-user.jpg';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
-                $upload_dir = 'C:/xampp/htdocs/ecommerce website/uploads/users/';
+                $upload_dir = 'C:/xampp/htdocs/syokichem/uploads/users/';
                 $file_ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
                 $image = uniqid() . '.' . $file_ext;
                 

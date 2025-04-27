@@ -330,10 +330,10 @@ try {
                 <?php foreach($cart_items as $item): ?>
                     <?php $is_logged_in = isset($_SESSION['user_id']) && $_SESSION['user_id']; ?>
                     <div class="cart-item">
-                        <img src="uploaded_img/<?= htmlspecialchars($item['image']); ?>" alt="<?= htmlspecialchars($item['name']); ?>">
+                        <img src="images/products/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>">
                         <div class="item-details">
-                            <div class="item-name"><?= htmlspecialchars($item['name']); ?></div>
-                            <div class="item-price">KSh <?= number_format($item['price'], 2); ?></div>
+                            <div class="item-name"><?= htmlspecialchars($item['name']) ?></div>
+                            <div class="item-price">KSh <?= number_format($item['price'], 2) ?></div>
                             <form action="" method="post" class="qty-controls" style="margin-bottom:0;" onsubmit="return false;">
                                 <input type="hidden" name="cart_id" value="<?= $is_logged_in ? (isset($item['pid']) ? $item['pid'] : '') : (isset($item['id']) ? $item['id'] : ''); ?>">
                                 <button type="button" class="qty-btn" onclick="updateCartQty(this, -1)"><i class="fas fa-minus"></i></button>

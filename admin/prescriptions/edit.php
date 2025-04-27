@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 $page_title = "Edit Prescription";
-//require 'C:/xampp/htdocs/ecommerce website/admin/includes/auth.php';
-//require 'C:/xampp/htdocs/ecommerce website/admin/components/connect.php';
+//require 'C:/xampp/htdocs/syokichem/admin/includes/auth.php';
+//require 'C:/xampp/htdocs/syokichem/admin/components/connect.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../components/connect.php';
 
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-//include 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_header.php';
+//include 'C:/xampp/htdocs/syokichem/admin/includes/admin_header.php';
 include __DIR__ . '/../includes/admin_header.php';
 
 
@@ -157,7 +157,7 @@ include __DIR__ . '/../includes/admin_header.php';
 </div>
 
 <?php 
-//require_once 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_footer.php'; 
+//require_once 'C:/xampp/htdocs/syokichem/admin/includes/admin_footer.php'; 
 require_once __DIR__ . '/../includes/admin_footer.php';
 
 

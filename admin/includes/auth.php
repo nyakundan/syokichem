@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // Fix path encoding issues
-$basePath = '/ecommerce website/admin/'; // Use literal space, not %20
+$basePath = '/syokichem/admin/'; // Use literal space, not %20
 
 // Secure session initialization
 if (session_status() === PHP_SESSION_NONE) {

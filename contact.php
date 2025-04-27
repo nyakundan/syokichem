@@ -1,10 +1,10 @@
 <?php
+session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Database connection and session start
 include 'components/connect.php';
-session_start();
 
 // Initialize variables
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '';
@@ -154,12 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       .contact-list a {
          color: var(--primary-green);
-         text-decoration: none;
+         text-decoration: none !important;
          font-weight: 500;
       }
 
       .contact-list a:hover {
          color: var(--primary-yellow);
+         text-decoration: none !important;
       }
 
       .modern-contact-grid {
@@ -247,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          color: #000 !important;
          background: none !important;
          font-weight: 700;
-         text-decoration: underline dotted;
+         text-decoration: none !important;
          font-size: 1.4rem;
          letter-spacing: 0.01em;
       }
@@ -255,6 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          color: var(--primary-yellow) !important;
          background: rgba(255,255,255,0.07);
          border-radius: 3px;
+         text-decoration: none !important;
       }
       body.contact-page {
          background: #f5f5f5;
@@ -401,9 +403,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="modern-contact-grid">
          <div class="modern-contact-item">
             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
-            <h3>Our location</h3>
-            <p>Distribution Centre: Mombasa Road, Syokimau-Katani Road, Kalembe Junction.</p>
-            <p>Head Office: Westlands Square, Woodvale Lane</p>
+            <h3 style="text-decoration: none !important;">Our location</h3>
+            <p style="text-decoration: none !important;">Distribution Centre: Mombasa Road, Syokimau-Katani Road, Kalembe Junction.</p>
+            <p style="text-decoration: none !important;">Head Office: Westlands Square, Woodvale Lane</p>
          </div>
          <div class="modern-contact-item">
             <div class="icon"><i class="fas fa-phone-alt"></i></div>
@@ -413,9 +415,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          </div>
          <div class="modern-contact-item">
             <div class="icon"><i class="fas fa-clock"></i></div>
-            <h3>Working Hours</h3>
-            <p>Mon - Fri: 8:00 AM - 6:00 PM</p>
-            <p>Sat: 9:00 AM - 4:00 PM</p>
+            <h3 style="text-decoration: none !important;">Working Hours</h3>
+            <p style="text-decoration: none !important;">Mon - Fri: 8:00 AM - 6:00 PM</p>
+            <p style="text-decoration: none !important;">Sat: 9:00 AM - 4:00 PM</p>
          </div>
       </div>
    </div>

@@ -219,6 +219,7 @@ try {
                                                 <a href="print.php?id=<?= $order['id'] ?>" class="btn btn-secondary" title="Print" target="_blank">
                                                     <i class="fas fa-print"></i>
                                                 </a>
+                                                <a href="delete.php?id=<?= urlencode($order['id']) ?>" class="btn btn-sm btn-danger btn-delete" title="Delete Order"><i class="fas fa-trash"></i></a>
                                             </div>
                                         </td>
                                     </tr>

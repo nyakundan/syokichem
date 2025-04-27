@@ -36,7 +36,7 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!isset($_SESSION['admin'])) {
     error_log("Unauthorized access attempt - no admin session");
     $_SESSION['error'] = 'Please login to continue';
-    header('Location: login.php');
+    header('Location: /syokichem/admin/login.php');
     exit();
 }
 
@@ -48,7 +48,7 @@ if ($adminCheck->rowCount() === 0) {
     error_log("Invalid admin session - ID not found in database");
     session_unset();
     session_destroy();
-    header('Location: login.php');
+    header('Location: /syokichem/admin/login.php');
     exit();
 }
 
@@ -66,7 +66,7 @@ if ((time() - $_SESSION['admin']['last_activity']) > $inactiveTimeout) {
     error_log("Session expired due to inactivity");
     session_unset();
     session_destroy();
-    header('Location: login.php?error=session_expired');
+    header('Location: /syokichem/admin/login.php?error=session_expired');
     exit();
 }
 
@@ -98,7 +98,7 @@ try {
     if (!$adminData) {
         error_log("Admin not found in database");
         session_destroy();
-        header('Location: login.php?error=invalid_session');
+        header('Location: /syokichem/admin/login.php?error=invalid_session');
         exit();
     }
 
@@ -494,56 +494,56 @@ $page_title = "Admin Dashboard";
             
             <ul class="nav flex-column mt-3">
                 <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link active">
+                    <a href="/syokichem/admin/dashboard.php" class="nav-link active">
                         <i class="fas fa-tachometer-alt"></i>
                         Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="orders/list.php" class="nav-link">
+                    <a href="/syokichem/admin/orders/list.php" class="nav-link">
                         <i class="fas fa-shopping-cart"></i>
                         Orders
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="special_offers/list.php" class="nav-link">
+                    <a href="/syokichem/admin/special_offers/list.php" class="nav-link">
                         <i class="fas fa-percentage"></i>
                         Special Offers
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="products/list.php" class="nav-link">
+                    <a href="/syokichem/admin/products/list.php" class="nav-link">
                         <i class="fas fa-box-open"></i>
                         Products
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="categories/list.php" class="nav-link">
+                    <a href="/syokichem/admin/categories/list.php" class="nav-link">
                         <i class="fas fa-tags"></i>
                         Categories
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="users/list.php" class="nav-link">
+                    <a href="/syokichem/admin/users/list.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         Users
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="blog/list.php" class="nav-link">
+                    <a href="/syokichem/admin/blog/list.php" class="nav-link">
                         <i class="fas fa-blog"></i>
                         Blog
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="coupons/list.php" class="nav-link">
+                    <a href="/syokichem/admin/coupons/list.php" class="nav-link">
                         <i class="fas fa-tag"></i>
                         Coupons
                     </a>
                 </li>
                 
                 <li class="nav-item">
-                    <a href="settings.php" class="nav-link">
+                    <a href="/syokichem/admin/settings.php" class="nav-link">
                         <i class="fas fa-cog"></i>
                         Settings
                     </a>
@@ -568,10 +568,10 @@ $page_title = "Admin Dashboard";
                             <i class="fas fa-user-circle me-1"></i> Account
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                            <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user me-2"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="settings.php"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                            <li><a class="dropdown-item" href="/syokichem/admin/profile.php"><i class="fas fa-user me-2"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="/syokichem/admin/settings.php"><i class="fas fa-cog me-2"></i> Settings</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                            <li><a class="dropdown-item" href="/syokichem/admin/logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -631,43 +631,48 @@ $page_title = "Admin Dashboard";
                         <div class="card-body">
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <a href="products/add.php" class="btn btn-primary w-100">
+                                    <a href="/syokichem/admin/products/add.php" class="btn btn-primary w-100">
                                         <i class="fas fa-plus me-2"></i> Add Product
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="orders/view.php" class="btn btn-success w-100">
+                                    <a href="/syokichem/admin/orders/view.php" class="btn btn-success w-100">
                                         <i class="fas fa-shopping-cart me-2"></i> Process Orders
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="blog/add.php" class="btn btn-info w-100">
+                                    <a href="/syokichem/admin/blog/add.php" class="btn btn-info w-100">
                                         <i class="fas fa-blog me-2"></i> Add Blog Post
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="coupons/add.php" class="btn btn-warning w-100">
+                                    <a href="/syokichem/admin/coupons/add.php" class="btn btn-warning w-100">
                                         <i class="fas fa-tag me-2"></i> Create Coupon
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="notifications/send.php" class="btn btn-secondary w-100">
+                                    <a href="/syokichem/admin/notifications/send.php" class="btn btn-secondary w-100">
                                         <i class="fas fa-envelope me-2"></i> Send Notification
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="settings/payment.php" class="btn btn-danger w-100">
+                                    <a href="/syokichem/admin/settings/payment.php" class="btn btn-danger w-100">
                                         <i class="fas fa-cog me-2"></i> Payment Settings
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="messages/list.php" class="btn btn-danger w-100">
+                                    <a href="/syokichem/admin/messages/list.php" class="btn btn-danger w-100">
                                         <i class="fas fa-envelope me-2"></i> Messages
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a href="special_offers/list.php" class="btn btn-primary w-100">
+                                    <a href="/syokichem/admin/special_offers/list.php" class="btn btn-primary w-100">
                                         <i class="fas fa-percentage me-2"></i> Special Offers
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="/syokichem/admin/consultations.php" class="btn btn-secondary w-100">
+                                        <i class="fas fa-user-md me-2"></i> Booked Consultations
                                     </a>
                                 </div>
                             </div>
@@ -680,7 +685,7 @@ $page_title = "Admin Dashboard";
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Recent Orders</h5>
-                            <a href="orders/view.php" class="btn btn-sm btn-outline-primary">View All</a>
+                            <a href="/syokichem/admin/orders/view.php" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -697,7 +702,7 @@ $page_title = "Admin Dashboard";
                                     <tbody>
                                         <?php foreach($recentOrders as $order): ?>
                                         <tr>
-                                            <td><a href="orders/view.php?id=<?= $order['id'] ?>">#<?= $order['id'] ?></a></td>
+                                            <td><a href="/syokichem/admin/orders/view.php?id=<?= $order['id'] ?>">#<?= $order['id'] ?></a></td>
                                             <td><?= htmlspecialchars($order['customer']) ?></td>
                                             <td>Ksh.<?= number_format($order['total_amount'], 2) ?></td>
                                             <td>
@@ -710,11 +715,11 @@ $page_title = "Admin Dashboard";
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="orders/invoice.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-info" title="Invoice">
+                                                    <a href="/syokichem/admin/orders/invoice.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-info" title="Invoice">
                                                         <i class="fas fa-file-invoice"></i>
                                                     </a>
                                                     <?php if ($order['status'] === 'pending'): ?>
-                                                        <a href="orders/assign.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-success" title="Assign">
+                                                        <a href="/syokichem/admin/orders/assign.php?id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-success" title="Assign">
                                                             <i class="fas fa-truck"></i>
                                                         </a>
                                                     <?php endif; ?>
@@ -737,7 +742,7 @@ $page_title = "Admin Dashboard";
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Low Stock Alerts</h5>
-                            <a href="products/list.php?filter=low_stock" class="btn btn-sm btn-outline-danger">View All</a>
+                            <a href="/syokichem/admin/products/list.php?filter=low_stock" class="btn btn-sm btn-outline-danger">View All</a>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -759,7 +764,7 @@ $page_title = "Admin Dashboard";
                                             </td>
                                             <td><?= $product['stock_alert'] ?></td>
                                             <td>
-                                                <a href="products/edit.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                                <a href="/syokichem/admin/products/edit.php?id=<?= $product['id'] ?>" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-edit"></i> Restock
                                                 </a>
                                             </td>
@@ -777,7 +782,7 @@ $page_title = "Admin Dashboard";
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="card-title mb-0">Recent Blog Posts</h5>
-                            <a href="blog/list.php" class="btn btn-sm btn-outline-primary">View All</a>
+                            <a href="/syokichem/admin/blog/list.php" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -804,10 +809,10 @@ $page_title = "Admin Dashboard";
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-2">
-                                                    <a href="blog/edit.php?id=<?= $post['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                                    <a href="/syokichem/admin/blog/edit.php?id=<?= $post['id'] ?>" class="btn btn-sm btn-outline-primary">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <a href="blog/delete.php?id=<?= $post['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
+                                                    <a href="/syokichem/admin/blog/delete.php?id=<?= $post['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
                                                 </div>

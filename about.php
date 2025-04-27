@@ -1,6 +1,6 @@
 <?php
-include 'components/connect.php';
 session_start();
+include 'components/connect.php';
 
 if(isset($_SESSION['user_id'])){
    $user_id = $_SESSION['user_id'];
@@ -36,36 +36,162 @@ if(isset($_SESSION['user_id'])){
    
    <style>
       :root {
-         --primary: #006837; /* Deep green - main brand color */
-         --primary-light: #4CAF50; /* Lighter green */
-         --secondary: #FFC107; /* Accent yellow */
-         --dark: #263238; /* Dark text */
-         --light: #f8f9fa; /* Light background */
-         --gray: #757575; /* Secondary text */
-         --primary-green: #006837;
+         --primary: #8BC34A; /* Updated to match lime-btn (primary-green) */
+         --primary-light: #4CAF50;
+         --secondary: #FFC107;
+         --dark: #263238;
+         --light: #f8f9fa;
+         --gray: #757575;
+         --primary-green: #8BC34A;
          --primary-yellow: #FFC107;
          --text-dark: #263238;
          --text-medium: #757575;
       }
       
       .about-hero {
-         background: linear-gradient(rgba(0, 104, 55, 0.85), rgba(0, 104, 55, 0.9)), url('images/pharmacy-bg.jpg') center/cover no-repeat;
-         color: white;
+         background: var(--primary-green);
+         color: #fff;
          padding: 6rem 0 4rem;
-         text-align: center;
+         text-align: left;
       }
-      
-      .about-hero h1 {
-         font-size: 2.8rem;
-         margin-bottom: 1.5rem;
-         font-weight: 700;
+      .about-hero-grid {
+         display: flex;
+         flex-wrap: wrap;
+         align-items: flex-start;
+         gap: 4rem;
+         justify-content: space-between;
       }
-      
-      .about-hero p {
-         max-width: 800px;
-         margin: 0 auto;
-         font-size: 1.1rem;
+      .about-hero-info {
+         flex: 1 1 420px;
+         min-width: 340px;
+         display: flex;
+         flex-direction: column;
+         gap: 2.2rem;
+         background: rgba(255,255,255,0.09);
+         border-radius: 14px;
+         padding: 2.5rem 2rem;
+         box-shadow: 0 4px 24px rgba(139,195,74,0.04);
+      }
+      .about-hero-info h2 {
+         color: #fff;
+         font-size: 2.4rem;
+         margin-bottom: 0.8rem;
+         letter-spacing: 0.01em;
+      }
+      .about-hero-info h3 {
+         color: #FFC107;
+         font-size: 1.5rem;
+         margin-bottom: 0.5rem;
+      }
+      .about-hero-info p {
+         color: #fff;
+         font-size: 1.15rem;
          line-height: 1.7;
+         margin-bottom: 0.8rem;
+         letter-spacing: 0.01em;
+      }
+      .about-hero-info strong {
+         color: #FFC107;
+      }
+      .about-hero-features {
+         flex: 1 1 420px;
+         min-width: 340px;
+         display: flex;
+         flex-direction: column;
+         gap: 2.5rem;
+      }
+      .about-hero-features h1 {
+         font-size: 2.2rem;
+         color: #fff;
+         margin-bottom: 1.2rem;
+      }
+      .features {
+         display: flex;
+         flex-direction: column;
+         gap: 1.2rem;
+      }
+      .feature {
+         display: flex;
+         gap: 1.3rem;
+         background: rgba(255,255,255,0.07);
+         border-radius: 10px;
+         padding: 1.2rem 1.4rem;
+         align-items: flex-start;
+         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+         transition: transform 0.3s;
+      }
+      .feature:hover {
+         transform: translateY(-3px);
+         background: rgba(255,255,255,0.13);
+      }
+      .feature i {
+         font-size: 2rem;
+         color: #FFC107;
+         min-width: 44px;
+         text-align: center;
+         padding-top: 5px;
+      }
+      .feature h3 {
+         color: #fff;
+         margin-bottom: 0.3rem;
+         font-size: 1.18rem;
+      }
+      .feature p {
+         color: #e6e6e6;
+         line-height: 1.6;
+         font-size: 1.02rem;
+      }
+      .about-team-section {
+         display: flex;
+         flex-wrap: wrap;
+         align-items: flex-start;
+         gap: 3.5rem;
+         justify-content: space-between;
+         margin-top: 4rem;
+      }
+      .about-team-info {
+         flex: 1 1 340px;
+         min-width: 320px;
+         background: #fff;
+         color: #263238;
+         border-radius: 14px;
+         padding: 2.5rem 2rem;
+         box-shadow: 0 4px 24px rgba(139,195,74,0.08);
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+      }
+      .about-team-info h2 {
+         color: var(--primary-green);
+         font-size: 2rem;
+         margin-bottom: 1.2rem;
+      }
+      .about-team-info p {
+         color: #263238;
+         font-size: 1.13rem;
+         line-height: 1.7;
+      }
+      .about-team-image {
+         flex: 1 1 340px;
+         min-width: 320px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+      }
+      .about-team-image img {
+         width: 100%;
+         max-width: 400px;
+         border-radius: 14px;
+         box-shadow: 0 6px 24px rgba(139,195,74,0.08);
+      }
+      @media (max-width: 992px) {
+         .about-hero-grid, .about-team-section {
+            flex-direction: column;
+            gap: 2.5rem;
+         }
+         .about-hero-info, .about-hero-features, .about-team-info, .about-team-image {
+            min-width: 0;
+         }
       }
       
       .about-section {
@@ -278,26 +404,25 @@ if(isset($_SESSION['user_id'])){
       }
       
       .btn-primary {
-         background-color: var(--secondary);
-         color: var(--dark);
+         background-color: var(--primary-green);
+         color: #fff;
       }
       
       .btn-primary:hover {
-         background-color: #ffb300;
+         background-color: #689F38;
          transform: translateY(-3px);
          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       }
       
       .btn-outline {
-         border: 2px solid white;
-         color: white;
+         border: 2px solid var(--primary-green);
+         color: var(--primary-green);
+         background: #fff;
       }
       
       .btn-outline:hover {
-         background-color: white;
-         color: var(--primary);
-         transform: translateY(-3px);
-         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+         background-color: #8BC34A;
+         color: #fff;
       }
       
       @media (max-width: 992px) {
@@ -335,6 +460,32 @@ if(isset($_SESSION['user_id'])){
             margin-bottom: 1rem;
          }
       }
+      
+      .white-card {
+         background: #fff;
+         color: #222;
+         border-radius: 12px;
+         box-shadow: 0 3px 18px rgba(44,62,80,0.06);
+         padding: 1.5rem 1.4rem 1.4rem 1.4rem;
+         margin-bottom: 1.3rem;
+         transition: box-shadow 0.2s, transform 0.2s;
+      }
+      .white-card h2, .white-card h3, .white-card p, .white-card strong {
+         color: #222 !important;
+      }
+      .white-card h3, .white-card h2 {
+         color: var(--primary-green) !important;
+      }
+      .white-card .value-item h3 i {
+         color: var(--secondary) !important;
+      }
+      .white-card .value-item p {
+         color: var(--gray) !important;
+      }
+      .mission-values.white-card {
+         margin-top: 2.5rem;
+         padding: 2rem 1.5rem 1.5rem 1.5rem;
+      }
    </style>
 </head>
 <body>
@@ -344,40 +495,47 @@ if(isset($_SESSION['user_id'])){
 <!-- Hero Banner Section -->
 <section class="about-hero">
    <div class="container">
-      <h1>Your Trusted Healthcare Partner</h1>
-      <p>SYOKICHEM Pharmaceuticals has been serving Kenya since 2014 with quality medications and exceptional pharmaceutical care. From our humble beginnings as a stand-alone pharmacy in Syokimau, we've grown into a trusted name in healthcare, combining traditional values with modern convenience.</p>
-   </div>
-</section>
-
-<!-- About Content Section -->
-<section class="about-section">
-   <div class="container">
-      <div class="about-grid">
-         <div class="about-content">
-            <h2>Why Choose Syokichem?</h2>
+      <div class="about-hero-grid">
+         <!-- Left: About Us full info -->
+         <div class="about-hero-info white-card">
+            <h2>ABOUT US</h2>
+            <h3>Who are we</h3>
+            <p>Welcome to SYOKICHEM, your trusted online pharmacy committed to delivering safe, affordable, and accessible healthcare directly to your doorstep. We specialize in providing prescription and over-the-counter medications through a secure digital platform, ensuring convenience without compromising on quality or patient safety.</p>
+            <p>Fully licensed and operated by qualified pharmacists, SYOKICHEM complies with all applicable pharmaceutical regulations and standards. We source our medications exclusively from certified manufacturers and authorized distributors, guaranteeing authenticity and efficacy with every order.</p>
+            <p>Our online services are designed to simplify the pharmacy experience—from easy prescription uploads and pharmacist consultations to discreet packaging and reliable delivery. With robust data protection measures in place, we safeguard your personal health information at every step.</p>
+            <p>Whether managing a chronic condition or ordering everyday healthcare essentials, SYOKICHEM is here to provide professional, pharmacy-grade support—securely and efficiently, wherever you are.</p>
+            <h3>Our Quality Statement</h3>
+            <p>We are committed to providing safe, reliable, and affordable medications through a secure and licensed platform. Our pharmacy operates in full compliance with regulatory standards, ensuring that every product we dispense is sourced from certified manufacturers and handled with the highest standards of quality control. Customer safety, privacy, and satisfaction are at the core of everything we do.</p>
+            <p><strong>MOTTO:</strong> THINK MEDICINES, THINK SYOKICHEM</p>
+            <p><strong>MISSION:</strong> To provide safe, affordable and accessible healthcare solutions by delivery high quality medications and personalized pharmaceutical care. We are committed to enhancing customer wellbeing through convenience, innovation and exceptional service.</p>
+            <p><strong>VISION:</strong> To be the most trusted and innovative pharmacy revolutionizing healthcare delivery by ensuring seamless access to medications and empowering individuals to take control of their health with confidence, convenience and care</p>
+         </div>
+         <!-- Right: Why Choose Syokichem features -->
+         <div class="about-hero-features">
+            <h1>Your Trusted Healthcare Partner</h1>
             <div class="features">
-               <div class="feature">
+               <div class="feature white-card">
                   <i class="fas fa-shield-alt"></i>
                   <div>
                      <h3>Licensed & Regulated</h3>
                      <p>Fully approved by the Pharmacy and Poisons Board of Kenya, ensuring the highest standards of pharmaceutical care and medication safety.</p>
                   </div>
                </div>
-               <div class="feature">
+               <div class="feature white-card">
                   <i class="fas fa-pills"></i>
                   <div>
                      <h3>Genuine Medications</h3>
                      <p>We source directly from reputable manufacturers and authorized distributors to guarantee 100% authentic pharmaceutical products.</p>
                   </div>
                </div>
-               <div class="feature">
+               <div class="feature white-card">
                   <i class="fas fa-truck-fast"></i>
                   <div>
                      <h3>Reliable Delivery Network</h3>
                      <p>Same-day delivery in Nairobi and efficient nationwide shipping. Your medications arrive safely and on time.</p>
                   </div>
                </div>
-               <div class="feature">
+               <div class="feature white-card">
                   <i class="fas fa-user-md"></i>
                   <div>
                      <h3>Expert Consultations</h3>
@@ -385,47 +543,40 @@ if(isset($_SESSION['user_id'])){
                   </div>
                </div>
             </div>
-            <a href="contact.php" class="btn btn-primary">Contact Our Team</a>
-         </div>
-         <div class="about-image">
-            <img src="images/pharmacy-team.jpg" alt="Our Professional Pharmacy Team">
+            <div class="mission-values white-card">
+               <h2 style="color: var(--primary-green); font-size: 2.2rem; margin: 2.5rem 0 1.5rem 0;">Our Mission & Values</h2>
+               <div class="value-item">
+                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
+                     <i class="fas fa-heart" style="margin-right: 10px; color: var(--secondary);"></i> Customer-Centric Care
+                  </h3>
+                  <p style="color: var(--gray); line-height: 1.7;">We prioritize your health needs with personalized support and transparent communication to build lasting trust.</p>
+               </div>
+               <div class="value-item">
+                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
+                     <i class="fas fa-gem" style="margin-right: 10px; color: var(--secondary);"></i> Integrity & Quality
+                  </h3>
+                  <p style="color: var(--gray); line-height: 1.7;">Upholding the highest ethical standards and ensuring all products meet strict regulatory requirements.</p>
+               </div>
+               <div class="value-item">
+                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
+                     <i class="fas fa-lightbulb" style="margin-right: 10px; color: var(--secondary);"></i> Innovation
+                  </h3>
+                  <p style="color: var(--gray); line-height: 1.7;">Leveraging technology to enhance your healthcare experience with convenient digital solutions.</p>
+               </div>
+            </div>
          </div>
       </div>
    </div>
 </section>
 
-<!-- Mission and Values Section -->
-<section class="mission-section" style="padding: 5rem 0; background-color: white;">
-   <div class="container">
-      <div class="mission-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;">
-         <div class="mission-image">
-            <img src="images/pharmacy-interior.jpg" alt="Syokichem Pharmacy Interior" style="border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
-         </div>
-         <div class="mission-content">
-            <h2 style="color: var(--primary); font-size: 2.2rem; margin-bottom: 1.5rem;">Our Mission & Values</h2>
-            
-            <div class="value-item" style="margin-bottom: 1.5rem;">
-               <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
-                  <i class="fas fa-heart" style="margin-right: 10px; color: var(--secondary);"></i> Customer-Centric Care
-               </h3>
-               <p style="color: var(--gray); line-height: 1.7;">We prioritize your health needs with personalized support and transparent communication to build lasting trust.</p>
-            </div>
-            
-            <div class="value-item" style="margin-bottom: 1.5rem;">
-               <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
-                  <i class="fas fa-gem" style="margin-right: 10px; color: var(--secondary);"></i> Integrity & Quality
-               </h3>
-               <p style="color: var(--gray); line-height: 1.7;">Upholding the highest ethical standards and ensuring all products meet strict regulatory requirements.</p>
-            </div>
-            
-            <div class="value-item" style="margin-bottom: 1.5rem;">
-               <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
-                  <i class="fas fa-lightbulb" style="margin-right: 10px; color: var(--secondary);"></i> Innovation
-               </h3>
-               <p style="color: var(--gray); line-height: 1.7;">Leveraging technology to enhance your healthcare experience with convenient digital solutions.</p>
-            </div>
-         </div>
-      </div>
+<!-- Our Team Section -->
+<section class="about-team-section">
+   <div class="about-team-info">
+      <h2>Our Team</h2>
+      <p>Our dedicated team at SYOKICHEM combines pharmaceutical expertise with a passion for care, ensuring safe, reliable, and convenient access to your medications—right from our pharmacy to your doorstep.</p>
+   </div>
+   <div class="about-team-image">
+      <img src="images/pharmacy-team.jpg" alt="Our Professional Pharmacy Team">
    </div>
 </section>
 

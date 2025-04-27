@@ -21,7 +21,7 @@ $formData = [
     'is_featured' => 0,
     'menu_order' => 0,
     'meta_title' => '',
-    'meta_description' => ''
+    'meta_description' => '',
 ];
 
 $errors = [];
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
         'menu_order' => (int)($_POST['menu_order'] ?? 0),
         'meta_title' => trim($_POST['meta_title'] ?? ''),
-        'meta_description' => trim($_POST['meta_description'] ?? '')
+        'meta_description' => trim($_POST['meta_description'] ?? ''),
     ];
 
     // Validation
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $formData['is_featured'],
                     $formData['menu_order'],
                     $formData['meta_title'],
-                    $formData['meta_description']
+                    $formData['meta_description'],
                 ]);
 
                 $conn->commit();
@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             function displayCategories($categories, $parent_id = null, $level = 0) {
                                 foreach ($categories as $category) {
                                     if ($category['parent_id'] == $parent_id) {
-                                        $selected = ($formData['parent_id'] == $category['id']) ? 'selected' : '';
+                                        $selected = (isset($formData['parent_id']) && $formData['parent_id'] == $category['id']) ? 'selected' : '';
                                         $indent = str_repeat('&nbsp;&nbsp;', $level);
                                         echo "<option value='{$category['id']}' $selected>";
                                         echo $indent . htmlspecialchars($category['name']);

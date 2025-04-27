@@ -29,7 +29,7 @@ if(isset($_SESSION['user_id'])){
    
    <style>
       :root {
-         --primary: #006837;
+         --primary: #8BC34A;
          --primary-light: #4CAF50;
          --secondary: #FFC107;
          --dark: #263238;
@@ -38,7 +38,7 @@ if(isset($_SESSION['user_id'])){
       }
       
       .faq-hero {
-         background: linear-gradient(rgba(0, 104, 55, 0.85), rgba(0, 104, 55, 0.9)), url('images/faq-bg.jpg') center/cover no-repeat;
+         background: linear-gradient(rgba(139, 195, 74, 0.93), rgba(139, 195, 74, 0.97)), url('images/faq-bg.jpg') center/cover no-repeat;
          color: white;
          padding: 6rem 0 4rem;
          text-align: center;
@@ -294,7 +294,7 @@ if(isset($_SESSION['user_id'])){
 </div>
 
 <!-- Contact Prompt -->
-<div class="contact-prompt container">
+<div class="contact-prompt container" style="background: var(--primary); color: #fff;">
    <h3>Didn't find what you were looking for?</h3>
    <p>Our pharmacy team is available 24/7 to answer your questions</p>
    <a href="contact.php" class="btn btn-primary" style="background-color: var(--secondary); color: var(--dark); margin-top: 1rem;">Contact Us</a>

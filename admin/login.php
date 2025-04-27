@@ -41,10 +41,10 @@ ini_set('error_log', __DIR__ . '/login_errors.log');
 // ==============================================
 
 // Server-side path (with space)
-$basePath = '/ecommerce website/admin/';
+$basePath = '/syokichem/admin/';
 
 // URL-encoded path for redirects (space -> %20)
-$urlPath = '/ecommerce%20website/admin/';
+$urlPath = '/syokichem/admin/';
 
 // ==============================================
 // DATABASE CONNECTION

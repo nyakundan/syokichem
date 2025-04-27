@@ -378,3 +378,239 @@ POST: Array
 )
 
 
+2025-04-25 14:20:19
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:20:36
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:20:37
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:20:38
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:20:39
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:20:40
+POST: Array
+(
+    [pid] => 3
+    [name] => Vitamin C 1000mg
+    [price] => 700.00
+    [image] => images/products/product_3_67fcc812c88f4.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:21:14
+POST: Array
+(
+    [pid] => 2
+    [name] => Paracetamol 500mg
+    [price] => 150.00
+    [image] => images/products/product_2_67fcc7f5aa629.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:23:18
+POST: Array
+(
+    [pid] => 13
+    [name] => Toothpaste and mouthwash
+    [price] => 250.00
+    [image] => images/products/product_13_67fcb786b3256.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:23:20
+POST: Array
+(
+    [pid] => 13
+    [name] => Toothpaste and mouthwash
+    [price] => 250.00
+    [image] => images/products/product_13_67fcb786b3256.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:23:21
+POST: Array
+(
+    [pid] => 13
+    [name] => Toothpaste and mouthwash
+    [price] => 250.00
+    [image] => images/products/product_13_67fcb786b3256.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:23:22
+POST: Array
+(
+    [pid] => 13
+    [name] => Toothpaste and mouthwash
+    [price] => 250.00
+    [image] => images/products/product_13_67fcb786b3256.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:23:23
+POST: Array
+(
+    [pid] => 13
+    [name] => Toothpaste and mouthwash
+    [price] => 250.00
+    [image] => images/products/product_13_67fcb786b3256.jpg
+    [qty] => 1
+)
+
+
+2025-04-25 14:25:15
+POST: Array
+(
+    [pid] => 2
+    [name] => Paracetamol 500mg
+    [price] => 150.00
+    [image] => images/products/product_2_67fcc7f5aa629.jpg
+    [qty] => 1
+    [add_to_cart] => 1
+)
+
+
+2025-04-25 14:25:24
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 2
+    [qty] => 2
+)
+
+
+2025-04-25 14:25:37
+POST: Array
+(
+    [action] => delete_item
+    [cart_id] => 2
+)
+
+
+2025-04-25 14:25:42
+POST: Array
+(
+    [pid] => 11
+    [name] => 3-Ply Surgical Face Masks (Pack of 50):
+    [price] => 90.00
+    [image] => images/products/product_11_67fcc45358607.jpg
+    [qty] => 1
+    [add_to_cart] => 1
+)
+
+
+2025-04-25 14:25:51
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 11
+    [qty] => 2
+)
+
+
+2025-04-27 02:14:55
+POST: Array
+(
+    [action] => delete_item
+    [cart_id] => 15
+)
+
+
+2025-04-27 04:32:04
+POST: Array
+(
+    [add_to_cart] => 1
+    [pid] => 15
+    [name] => Panadol Extra (Paracetamol & Caffeine)
+    [price] => 120.00
+    [image] => 680d693118f8b_panadol.jpg
+)
+
+
+2025-04-27 04:33:42
+POST: Array
+(
+    [pid] => 21
+    [name] => Glucometer (Blood Glucose Monitor)
+    [price] => 3500.00
+    [image] => 680d943d9a4c8_glucometer.jpg
+    [add_to_cart] => 1
+)
+
+
+2025-04-27 06:17:35
+POST: Array
+(
+    [pid] => 15
+    [name] => Panadol Extra (Paracetamol & Caffeine)
+    [price] => 120.00
+    [image] => 680d693118f8b_panadol.jpg
+    [qty] => 1
+    [add_to_cart] => 1
+)
+
+
+2025-04-27 06:17:38
+POST: Array
+(
+    [pid] => 15
+    [name] => Panadol Extra (Paracetamol & Caffeine)
+    [price] => 120.00
+    [image] => 680d693118f8b_panadol.jpg
+    [qty] => 1
+    [add_to_cart] => 1
+)
+
+

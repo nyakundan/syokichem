@@ -503,7 +503,7 @@ INSERT INTO `prescriptions` (`id`, `user_id`, `doctor_name`, `patient_name`, `pr
 (6, 2, 'steven', 'ben', 'prescription_67e98e6d3131f4.53101358.jpeg', NULL, '2025-04-01 20:30:08', 'pending', NULL, NULL, NULL, '2025-03-30 18:33:17', '2025-03-30 18:33:17'),
 (7, 2, 'steven', 'ben', 'prescription_67e98e793062a2.56216437.jpeg', NULL, '2025-04-01 20:30:08', 'pending', NULL, NULL, NULL, '2025-03-30 18:33:29', '2025-03-30 18:33:29'),
 (8, 2, 'steven', 'ben', 'prescription_67e98efebfe439.35248625.jpeg', NULL, '2025-04-01 20:30:08', 'approved', '', NULL, NULL, '2025-03-30 18:35:42', '2025-04-01 22:45:05'),
-(9, 2, 'steven', 'ben', 'rx_b874d501235b1fb0595188452fead25d.jpeg', 'testing', '2025-04-01 20:30:16', 'rejected', '\r\nWarning:  Undefined array key &#34;admin_notes&#34; in C:\\xampp\\htdocs\\ecommerce website\\admin\\prescriptions\\update.php on line 59\r\n', 2, NULL, '2025-04-01 17:30:16', '2025-04-01 22:42:39'),
+(9, 2, 'steven', 'ben', 'rx_b874d501235b1fb0595188452fead25d.jpeg', 'testing', '2025-04-01 20:30:16', 'rejected', '\r\nWarning:  Undefined array key &#34;admin_notes&#34; in C:\\xampp\\htdocs\\syokichem\\admin\\prescriptions\\update.php on line 59\r\n', 2, NULL, '2025-04-01 17:30:16', '2025-04-01 22:42:39'),
 (10, 2, 'steven', 'ben', 'rx_d9213e50bc094d93288ec22445798fd6.jpeg', 'testing', '2025-04-08 04:13:52', 'pending', NULL, NULL, NULL, '2025-04-08 01:13:52', '2025-04-08 01:13:52'),
 (11, 2, 'steven', 'ben', 'rx_caff8a3b05b82bf5.jpeg', 'testing', '2025-04-08 04:18:34', 'pending', NULL, NULL, NULL, '2025-04-08 01:18:34', '2025-04-08 01:18:34');
 

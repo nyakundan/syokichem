@@ -1,10 +1,10 @@
 <?php
+session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'components/connect.php';
 include 'components/functions.php';
-session_start();
 
 if(isset($_SESSION['user_id'])){
    $user_id = $_SESSION['user_id'];
@@ -159,6 +159,14 @@ $coupons = $select_coupons->fetchAll(PDO::FETCH_ASSOC);
    <meta http-equiv="Pragma" content="no-cache">
    <meta http-equiv="Expires" content="0">
    <meta name="description" content="Kenya's trusted online pharmacy. Prescription medicines, OTC drugs, and healthcare products delivered to your doorstep.">
+   <style>
+      a {
+         text-decoration: none !important;
+      }
+      a:hover, a:focus {
+         text-decoration: none !important;
+      }
+   </style>
 </head>
 <body>
 <?php
@@ -233,19 +241,19 @@ if(isset($message)){
             ");
             $select_offers->execute();
             // DEBUG OUTPUT START
-            echo '<!-- DEBUG: Current server time: '.date('Y-m-d H:i:s').' -->';
-            echo '<!-- DEBUG: Offers found: '.$select_offers->rowCount().' -->';
-            if($select_offers->rowCount() === 0) {
-                echo '<div style="color:red;background:#fff3cd;padding:1rem;margin-bottom:1rem;border:1px solid #ffeeba;">No special offers found. Check your special_offers table:<br> - is_active=1<br> - start_date &le; now<br> - end_date &ge; now<br> - product_id exists in products with stock &gt; 0</div>';
-            } else {
-                $offers_preview = [];
-                foreach($select_offers->fetchAll(PDO::FETCH_ASSOC) as $offer) {
-                    $offers_preview[] = htmlspecialchars($offer['name'] ?? '[no name]');
-                }
-                echo '<!-- DEBUG: Offer product names: '.implode(', ', $offers_preview).' -->';
-                // Reset for normal loop
-                $select_offers->execute();
-            }
+            // echo '<!-- DEBUG: Current server time: '.date('Y-m-d H:i:s').' -->';
+            // echo '<!-- DEBUG: Offers found: '.$select_offers->rowCount().' -->';
+            // if($select_offers->rowCount() === 0) {
+            //     echo '<div style="color:red;background:#fff3cd;padding:1rem;margin-bottom:1rem;border:1px solid #ffeeba;">No special offers found. Check your special_offers table:<br> - is_active=1<br> - start_date &le; now<br> - end_date &ge; now<br> - product_id exists in products with stock &gt; 0</div>';
+            // } else {
+            //     $offers_preview = [];
+            //     foreach($select_offers->fetchAll(PDO::FETCH_ASSOC) as $offer) {
+            //         $offers_preview[] = htmlspecialchars($offer['name'] ?? '[no name]');
+            //     }
+            //     echo '<!-- DEBUG: Offer product names: '.implode(', ', $offers_preview).' -->';
+            //     // Reset for normal loop
+            //     $select_offers->execute();
+            // }
             // DEBUG OUTPUT END
             if($select_offers->rowCount() > 0){
                 while($offer = $select_offers->fetch(PDO::FETCH_ASSOC)){
@@ -261,8 +269,8 @@ if(isset($message)){
                             <button class="fas fa-heart" type="submit" name="add_to_wishlist"></button>
                             <a href="quick_view.php?pid=<?= $offer['id']; ?>" class="fas fa-eye"></a>
                             <div class="offer-badge">Save <?= $discount_percentage; ?>%</div>
-                            <img src="uploaded_img/<?= $offer['image_01']; ?>" alt="<?= htmlspecialchars($offer['name']); ?>">
-                            <div class="name"><?= htmlspecialchars($offer['name']); ?></div>
+                            <img src="images/products/<?= $offer['image_01']; ?>" alt="<?= htmlspecialchars($offer['name']); ?>">
+                            <div class="name"><a href="product_details.php?pid=<?= $offer['id']; ?>" style="color:inherit;text-decoration:underline;"><?= htmlspecialchars($offer['name']); ?></a></div>
                             <div class="flex">
                                 <div class="price">
                                     <span class="original">KSh <?= number_format($offer['old_price'], 2); ?></span>
@@ -321,8 +329,8 @@ if(isset($message)){
                         <span class="new-badge">New</span>
                         <button class="fas fa-heart" type="submit" name="add_to_wishlist"></button>
                         <a href="quick_view.php?pid=<?= $fetch_new['id']; ?>" class="fas fa-eye"></a>
-                        <img src="uploaded_img/<?= $fetch_new['image_01']; ?>" alt="<?= $fetch_new['name']; ?>">
-                        <div class="name"><?= $fetch_new['name']; ?></div>
+                        <img src="images/products/<?= $fetch_new['image_01']; ?>" alt="<?= $fetch_new['name']; ?>">
+                        <div class="name"><a href="product_details.php?pid=<?= $fetch_new['id']; ?>" style="color:inherit;text-decoration:underline;"><?= $fetch_new['name']; ?></a></div>
                         <div class="flex">
                             <div class="price">
                                 <span>KSh</span><?= number_format($fetch_new['price'], 2); ?>
@@ -387,10 +395,23 @@ if(isset($message)){
          <?php
          if(!empty($category_tree)){
             foreach($category_tree as $category){
+                $slug = $category['slug'];
+                $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $imagePath = '';
+                foreach ($imageExtensions as $ext) {
+                    $tryPath = "images/categories/$slug.$ext";
+                    if (file_exists($tryPath)) {
+                        $imagePath = $tryPath;
+                        break;
+                    }
+                }
+                if (!$imagePath) {
+                    $imagePath = 'images/categories/default-category.jpg';
+                }
                 ?>
-                <a href="category.php?category=<?= $category['slug']; ?>" class="swiper-slide slide">
-                    <img src="images/categories/<?= $category['image'] ?? 'default-category.jpg'; ?>" alt="<?= $category['name']; ?>">
-                    <h3><?= $category['name']; ?></h3>
+                <a href="category.php?category=<?= urlencode($category['slug']); ?>" class="swiper-slide slide">
+                    <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($category['name']); ?>">
+                    <h3><?= htmlspecialchars($category['name']); ?></h3>
                 </a>
                 <?php
             }
@@ -420,8 +441,8 @@ if(isset($message)){
                     <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
                     <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
                     <a href="quick_view.php?pid=<?= $fetch_product['id']; ?>" class="fas fa-eye"></a>
-                    <img src="uploaded_img/<?= $fetch_product['image_01']; ?>" alt="<?= $fetch_product['name']; ?>">
-                    <div class="name"><?= $fetch_product['name']; ?></div>
+                    <img src="images/products/<?= $fetch_product['image_01']; ?>" alt="<?= $fetch_product['name']; ?>">
+                    <div class="name"><a href="product_details.php?pid=<?= $fetch_product['id']; ?>" style="color:inherit;text-decoration:underline;"><?= $fetch_product['name']; ?></a></div>
                     <div class="flex">
                         <div class="price"><span>KSh</span><?= number_format($fetch_product['price'], 2); ?></div>
                     </div>

@@ -14,48 +14,82 @@ $errors = [];
 $success = '';
 $formData = [
     'name' => '',
+    'slug' => '',
     'category_id' => '',
-    'product_type' => 'otc',
+    'category' => '',
     'price' => '',
+    'status' => 'active',
     'description' => '',
-    'manufacturer' => '',
-    'supplier_id' => '',
-    'stock' => '',
-    'max_quantity' => '5',
-    'requires_prescription' => '0',
-    'image_01' => '',
     'ingredients' => '',
     'dosage' => '',
+    'manufacturer' => '',
+    'supplier_id' => '',
+    'requires_prescription' => '0',
+    'max_quantity' => '5',
+    'image_01' => '',
     'image_02' => '',
     'image_03' => '',
     'sales' => 0,
-    'status' => 'active',
+    'stock' => '',
+    'how_to_use' => '',
+    'precautions' => '',
 ];
 
+// Fetch all categories for dropdown
+$categories = $conn->query("SELECT id, name, parent_id FROM product_categories ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+
+function buildCategoryTree($elements, $parentId = null) {
+    $branch = [];
+    foreach ($elements as $element) {
+        if ($element['parent_id'] == $parentId) {
+            $children = buildCategoryTree($elements, $element['id']);
+            $element['children'] = $children;
+            $branch[] = $element;
+        }
+    }
+    return $branch;
+}
+
+function getLeafCategories($categories, &$leaf = []) {
+    foreach ($categories as $cat) {
+        if (empty($cat['children'])) {
+            $leaf[] = $cat;
+        } else {
+            getLeafCategories($cat['children'], $leaf);
+        }
+    }
+    return $leaf;
+}
+
+$category_tree = buildCategoryTree($categories);
+$leaf_categories = getLeafCategories($category_tree);
+
 // Get dropdown options
-$categories = $conn->query("SELECT id, name FROM product_categories  ORDER BY name")->fetchAll();
 $suppliers = $conn->query("SELECT id, name FROM suppliers ORDER BY name")->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and validate input
     $formData = [
         'name' => trim($_POST['name'] ?? ''),
+        'slug' => trim($_POST['slug'] ?? ''),
         'category_id' => $_POST['category_id'] ?? null,
-        'product_type' => $_POST['product_type'] ?? 'otc',
+        'category' => trim($_POST['category'] ?? ''),
         'price' => (float)($_POST['price'] ?? 0),
+        'status' => $_POST['status'] ?? 'active',
         'description' => trim($_POST['description'] ?? ''),
-        'manufacturer' => trim($_POST['manufacturer'] ?? ''),
-        'supplier_id' => $_POST['supplier_id'] ?? null,
-        'stock' => (int)($_POST['stock'] ?? 0),
-        'max_quantity' => (int)($_POST['max_quantity'] ?? 5),
-        'requires_prescription' => isset($_POST['requires_prescription']) ? 1 : 0,
-        'image_01' => '',
         'ingredients' => trim($_POST['ingredients'] ?? ''),
         'dosage' => trim($_POST['dosage'] ?? ''),
+        'manufacturer' => trim($_POST['manufacturer'] ?? ''),
+        'supplier_id' => $_POST['supplier_id'] ?? null,
+        'requires_prescription' => isset($_POST['requires_prescription']) ? 1 : 0,
+        'max_quantity' => (int)($_POST['max_quantity'] ?? 5),
+        'sales' => (int)($_POST['sales'] ?? 0),
+        'stock' => (int)($_POST['stock'] ?? 0),
+        'how_to_use' => trim($_POST['how_to_use'] ?? ''),
+        'precautions' => trim($_POST['precautions'] ?? ''),
+        'image_01' => '',
         'image_02' => '',
         'image_03' => '',
-        'sales' => 0,
-        'status' => $_POST['status'] ?? 'active',
     ];
 
     // Validate required fields
@@ -74,50 +108,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conn->beginTransaction();
 
-            // Handle image uploads
-            $image_01 = 'default-product.jpg';
-            $image_02 = '';
-            $image_03 = '';
-            if (!empty($_FILES['image_01']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                $fileName = uniqid() . '_' . basename($_FILES['image_01']['name']);
-                $targetFile = $uploadDir . $fileName;
-                if (move_uploaded_file($_FILES['image_01']['tmp_name'], $targetFile)) {
-                    $image_01 = $fileName;
+            // Handle multiple image uploads
+            $uploadDir = __DIR__ . '/../../images/products/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $imageFields = ['image_01', 'image_02', 'image_03'];
+            foreach ($imageFields as $imgField) {
+                if (!empty($_FILES[$imgField]['name'])) {
+                    $fileName = uniqid() . '_' . basename($_FILES[$imgField]['name']);
+                    $targetFile = $uploadDir . $fileName;
+                    if (move_uploaded_file($_FILES[$imgField]['tmp_name'], $targetFile)) {
+                        $formData[$imgField] = $fileName;
+                    } else {
+                        throw new Exception('Failed to upload ' . $imgField);
+                    }
                 } else {
-                    throw new Exception('Failed to upload product image');
-                }
-            }
-            if (!empty($_FILES['image_02']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                $fileName2 = uniqid() . '_' . basename($_FILES['image_02']['name']);
-                $targetFile2 = $uploadDir . $fileName2;
-                if (move_uploaded_file($_FILES['image_02']['tmp_name'], $targetFile2)) {
-                    $image_02 = $fileName2;
-                }
-            }
-            if (!empty($_FILES['image_03']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                $fileName3 = uniqid() . '_' . basename($_FILES['image_03']['name']);
-                $targetFile3 = $uploadDir . $fileName3;
-                if (move_uploaded_file($_FILES['image_03']['tmp_name'], $targetFile3)) {
-                    $image_03 = $fileName3;
+                    $formData[$imgField] = null;
                 }
             }
 
             // Insert product - matching your exact table structure
             $stmt = $conn->prepare("INSERT INTO products (
-                name, product_type, category_id, price, status, description, ingredients, dosage, manufacturer, supplier_id, requires_prescription, max_quantity, stock, image_01, image_02, image_03, sales, created_at
+                name, slug, category_id, price, status, description, ingredients, dosage, manufacturer, supplier_id, requires_prescription, max_quantity, image_01, image_02, image_03, sales, stock, category, how_to_use, precautions
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )");
 
             $stmt->execute([
                 $formData['name'],
-                $formData['product_type'],
+                $formData['slug'],
                 $formData['category_id'],
                 $formData['price'],
                 $formData['status'],
@@ -128,11 +148,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $formData['supplier_id'],
                 $formData['requires_prescription'],
                 $formData['max_quantity'],
-                $formData['stock'],
-                $image_01,
-                $image_02,
-                $image_03,
+                $formData['image_01'],
+                $formData['image_02'],
+                $formData['image_03'],
                 $formData['sales'],
+                $formData['stock'],
+                $formData['category'],
+                $formData['how_to_use'],
+                $formData['precautions'],
             ]);
 
             $conn->commit();
@@ -228,13 +251,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($formData['name']) ?>" required>
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="product_type" class="form-label required">Product Type</label>
-                    <select class="form-select" id="product_type" name="product_type" required>
-                        <option value="prescription" <?= $formData['product_type'] === 'prescription' ? 'selected' : '' ?>>Prescription</option>
-                        <option value="otc" <?= $formData['product_type'] === 'otc' ? 'selected' : '' ?>>Over-the-Counter</option>
-                        <option value="wellness" <?= $formData['product_type'] === 'wellness' ? 'selected' : '' ?>>Wellness</option>
-                        <option value="medical_device" <?= $formData['product_type'] === 'medical_device' ? 'selected' : '' ?>>Medical Device</option>
-                    </select>
+                    <label for="slug" class="form-label">Slug</label>
+                    <input type="text" class="form-control" id="slug" name="slug" value="<?= htmlspecialchars($formData['slug']) ?>">
                 </div>
             </div>
             <div class="form-row">
@@ -242,15 +260,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="category_id" class="form-label required">Category</label>
                     <select class="form-select" id="category_id" name="category_id" required>
                         <option value="">Select Category</option>
-                        <?php if (!empty($categories)): ?>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['id'] ?>" <?= $formData['category_id'] == $cat['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cat['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <option value="" disabled>No categories available</option>
-                        <?php endif; ?>
+                        <?php
+                        function renderCategoryOptions($categories, $prefix = '', $selectedId = null) {
+                            foreach ($categories as $cat) {
+                                if (!empty($cat['children'])) {
+                                    // Main category with children
+                                    echo '<optgroup label="' . htmlspecialchars($cat['name']) . '">';
+                                    renderCategoryOptions($cat['children'], '&nbsp;&nbsp;&nbsp;', $selectedId);
+                                    echo '</optgroup>';
+                                } else {
+                                    // Leaf category
+                                    $selected = $selectedId == $cat['id'] ? 'selected' : '';
+                                    echo '<option value="' . $cat['id'] . '" ' . $selected . '>' . $prefix . htmlspecialchars($cat['name']) . '</option>';
+                                }
+                            }
+                        }
+                        renderCategoryOptions($category_tree, '', $formData['category_id'] ?? null);
+                        ?>
                     </select>
                 </div>
                 <div class="form-group col-md-6">
@@ -283,11 +309,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
             <div class="form-row">
-                <div class="form-group col-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription" value="1" <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="requires_prescription">Requires Prescription</label>
-                    </div>
+                <div class="form-group col-md-4">
+                    <label for="image_01" class="form-label">Image 1</label>
+                    <input type="file" class="form-control" id="image_01" name="image_01" accept="image/*">
+                    <div id="imagePreview01" class="image-preview"></div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="image_02" class="form-label">Image 2</label>
+                    <input type="file" class="form-control" id="image_02" name="image_02" accept="image/*">
+                    <div id="imagePreview02" class="image-preview"></div>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="image_03" class="form-label">Image 3</label>
+                    <input type="file" class="form-control" id="image_03" name="image_03" accept="image/*">
+                    <div id="imagePreview03" class="image-preview"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="sales" class="form-label">Sales</label>
+                    <input type="number" class="form-control" id="sales" name="sales" min="0" value="<?= htmlspecialchars((string)$formData['sales']) ?>">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="active" <?= $formData['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                        <option value="inactive" <?= $formData['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="category" class="form-label">Category (Text)</label>
+                    <input type="text" class="form-control" id="category" name="category" value="<?= htmlspecialchars($formData['category']) ?>">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="ingredients" class="form-label">Ingredients</label>
+                    <textarea class="form-control" id="ingredients" name="ingredients"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="dosage" class="form-label">Dosage</label>
+                    <textarea class="form-control" id="dosage" name="dosage"><?= htmlspecialchars($formData['dosage']) ?></textarea>
                 </div>
             </div>
             <div class="form-row">
@@ -295,45 +363,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="manufacturer" class="form-label">Manufacturer</label>
                     <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="<?= htmlspecialchars($formData['manufacturer']) ?>">
                 </div>
-                <div class="form-group col-12">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="3"><?= htmlspecialchars($formData['description']) ?></textarea>
+                <div class="form-group col-md-6">
+                    <label for="requires_prescription" class="form-label">Requires Prescription</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription" <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="requires_prescription">Yes</label>
+                    </div>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="ingredients" class="form-label">Ingredients</label>
-                    <textarea class="form-control" id="ingredients" name="ingredients" rows="2"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
+                    <label for="how_to_use" class="form-label">How to Use</label>
+                    <textarea class="form-control" id="how_to_use" name="how_to_use"><?= htmlspecialchars($formData['how_to_use']) ?></textarea>
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="dosage" class="form-label">Dosage</label>
-                    <input type="text" class="form-control" id="dosage" name="dosage" value="<?= htmlspecialchars($formData['dosage']) ?>">
-                </div>
-                <div class="form-group col-md-4">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="active" <?= $formData['status']==='active'?'selected':'' ?>>Active</option>
-                        <option value="inactive" <?= $formData['status']==='inactive'?'selected':'' ?>>Inactive</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-4">
-                    <label for="sales" class="form-label">Sales</label>
-                    <input type="number" class="form-control" id="sales" name="sales" min="0" value="<?= htmlspecialchars($formData['sales']) ?>">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-4">
-                    <label for="image_01" class="form-label">Main Product Image</label>
-                    <div id="imagePreview" class="image-preview mb-3"></div>
-                    <input class="form-control" type="file" id="image_01" name="image_01" accept="image/*">
-                </div>
-                <div class="form-group col-md-4">
-                    <label for="image_02" class="form-label">Image 2</label>
-                    <input class="form-control" type="file" id="image_02" name="image_02" accept="image/*">
-                </div>
-                <div class="form-group col-md-4">
-                    <label for="image_03" class="form-label">Image 3</label>
-                    <input class="form-control" type="file" id="image_03" name="image_03" accept="image/*">
+                    <label for="precautions" class="form-label">Precautions</label>
+                    <textarea class="form-control" id="precautions" name="precautions"><?= htmlspecialchars($formData['precautions']) ?></textarea>
                 </div>
             </div>
             <div class="form-row">
@@ -349,9 +394,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Image preview functionality
+        // Image preview functionality remains unchanged
         document.getElementById('image_01').addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
+            const preview = document.getElementById('imagePreview01');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" alt="Preview">`;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        document.getElementById('image_02').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview02');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" alt="Preview">`;
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        document.getElementById('image_03').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview03');
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {

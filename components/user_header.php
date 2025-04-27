@@ -2,46 +2,116 @@
 // Log cart contents for debugging
 error_log("Cart Contents: " . print_r($_SESSION['cart'] ?? 'No cart', true));
 
-// Get categories and their subcategories
-$categories = $conn->prepare("
-    SELECT 
-        c1.id as parent_id,
-        c1.name as parent_name,
-        c1.slug as parent_slug,
-        c2.id as child_id,
-        c2.name as child_name,
-        c2.slug as child_slug
-    FROM product_categories c1
-    LEFT JOIN product_categories c2 ON c1.id = c2.parent_id
-    WHERE c1.parent_id IS NULL
-    ORDER BY c1.name, c2.name
-");
-$categories->execute();
-
-// Organize categories into a hierarchical structure
-$category_tree = [];
-while($category = $categories->fetch(PDO::FETCH_ASSOC)) {
-    $parent_id = $category['parent_id'];
-    if(!isset($category_tree[$parent_id])) {
-        $category_tree[$parent_id] = [
-            'id' => $category['parent_id'],
-            'name' => $category['parent_name'],
-            'slug' => $category['parent_slug'],
-            'subcategories' => []
-        ];
+// Recursive function to build category tree
+function buildCategoryTree(array $elements, $parentId = null) {
+    $branch = array();
+    foreach ($elements as $element) {
+        if ($element['parent_id'] == $parentId) {
+            $children = buildCategoryTree($elements, $element['id']);
+            if ($children) {
+                $element['children'] = $children;
+            } else {
+                $element['children'] = [];
+            }
+            $branch[] = $element;
+        }
     }
-    
-    if($category['child_id']) {
-        $category_tree[$parent_id]['subcategories'][] = [
-            'id' => $category['child_id'],
-            'name' => $category['child_name'],
-            'slug' => $category['child_slug']
-        ];
+    return $branch;
+}
+
+// Recursive function to build full category tree
+function buildFullCategoryTree($elements, $parentId = null) {
+    $branch = array();
+    foreach ($elements as $element) {
+        if ($element['parent_id'] == $parentId) {
+            $children = buildFullCategoryTree($elements, $element['id']);
+            if ($children) {
+                $element['children'] = $children;
+            } else {
+                $element['children'] = [];
+            }
+            $branch[] = $element;
+        }
+    }
+    return $branch;
+}
+
+// Helper: chunk categories for column breaking
+function chunkCategories($categories, $chunkSize = 10) {
+    return array_chunk($categories, $chunkSize);
+}
+
+// Recursive render: render all chunks/columns, and for each item with children, render its own submenu (recursive)
+function renderCategoryLevel($categories, $level = 0, $chunkSize = 10) {
+    if (!$categories) return;
+    $chunks = chunkCategories($categories, $chunkSize);
+    foreach ($chunks as $chunkIdx => $chunk) {
+        $left = ($level + $chunkIdx) * 100;
+        $ulClass = ($level === 0) ? 'category-level level-0' : 'category-level';
+        echo '<ul class="' . $ulClass . '" style="list-style:none; margin:0; padding:0; min-width:200px; position:absolute; left:' . $left . '%; top:0; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.08); border-radius:0.6rem; padding:0.5rem 0; z-index:' . (999 + $level + $chunkIdx) . ';">';
+        foreach ($chunk as $cat) {
+            $hasChildren = !empty($cat['children']);
+            // In the category rendering, ensure links are in the form:
+            // <a href="shop.php?category=ID">Category Name</a>
+            // This is already present in renderCategoryLevel:
+            // echo '<a href="shop.php?category=' . htmlspecialchars($cat['id']) . '" ...>';
+            // No further change needed for link structure.
+            // Optionally, highlight active category (if desired)
+            // You can add a class if $_GET['category'] matches the current category id
+            // Example:
+            // $activeClass = (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active-category' : '';
+            // echo '<a class="' . $activeClass . '" href="shop.php?category=...">...';
+            $activeClass = (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active-category' : '';
+            echo '<li class="category-item" style="position:relative;">';
+            echo '<a class="' . $activeClass . '" href="shop.php?category=' . htmlspecialchars($cat['id']) . '" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#8BC34A;padding:0.7rem 1.2rem;font-weight:500;">' . htmlspecialchars($cat['name']);
+            if ($hasChildren) echo '<i class="fas fa-chevron-right" style="margin-left:0.7rem;"></i>';
+            echo '</a>';
+            if ($hasChildren) {
+                echo '<div class="category-submenu" style="position:absolute;left:100%;top:0;">';
+                renderCategoryLevel($cat['children'], $level + 1, $chunkSize);
+                echo '</div>';
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
     }
 }
 
-// Convert to array for easier iteration
-$category_tree = array_values($category_tree);
+// Fetch all categories
+$categories_stmt = $conn->prepare("SELECT id, name, slug, parent_id FROM product_categories ORDER BY name");
+$categories_stmt->execute();
+$categories_flat = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
+$category_tree = buildCategoryTree($categories_flat);
+
+// Fetch all categories for tree
+$all_categories_stmt = $conn->prepare("SELECT id, name, slug, parent_id FROM product_categories");
+$all_categories_stmt->execute();
+$all_categories = $all_categories_stmt->fetchAll(PDO::FETCH_ASSOC);
+$category_tree_full = buildFullCategoryTree($all_categories);
+
+// Get only the first 8 main categories
+$main_categories = array_slice($category_tree, 0, 8);
+$main_categories_full = array_slice($category_tree_full, 0, 8);
+
+// Fetch only the 8 main categories (top-level)
+$main_categories_stmt = $conn->prepare("SELECT id, name, slug FROM product_categories WHERE parent_id IS NULL OR parent_id = 0 ORDER BY name LIMIT 8");
+$main_categories_stmt->execute();
+$main_categories = $main_categories_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Build an array of main category IDs
+$main_cat_ids = array_column($main_categories, 'id');
+$subcategories_by_parent = [];
+if (!empty($main_cat_ids)) {
+    // Prepare placeholders for IN clause
+    $placeholders = implode(',', array_fill(0, count($main_cat_ids), '?'));
+    $subcategories_stmt = $conn->prepare("SELECT id, name, slug, parent_id FROM product_categories WHERE parent_id IN ($placeholders)");
+    $subcategories_stmt->execute($main_cat_ids);
+    $subcategories = $subcategories_stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Organize subcategories by parent_id
+    foreach ($subcategories as $subcat) {
+        $subcategories_by_parent[$subcat['parent_id']][] = $subcat;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -123,13 +193,13 @@ $category_tree = array_values($category_tree);
       padding: 0 1.5rem;
    }
    .contact-info span, .contact-info a, .contact-info i {
-      color: var(--pure-white) !important;
+      color: var(--pure-white);
       font-weight: 500;
       text-decoration: none;
       transition: color 0.2s;
    }
    .contact-info a:hover {
-      color: var(--primary-yellow) !important;
+      color: var(--primary-yellow);
    }
    .contact-info i {
       margin-right: 0.5rem;
@@ -229,6 +299,8 @@ $category_tree = array_values($category_tree);
    .header-actions {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
+      gap: 1.2rem;
    }
    
    .action-icons {
@@ -294,17 +366,12 @@ $category_tree = array_values($category_tree);
       display: flex;
       align-items: center;
       padding: 1.2rem 1.5rem;
-      color: var(--text-dark);
+      color: var(--primary-green);
       text-decoration: none;
       font-weight: 500;
       transition: var(--transition);
       white-space: nowrap;
       font-size: 1.4rem;
-   }
-   
-   .nav-menu > li > a:hover {
-      color: var(--primary-green);
-      background-color: rgba(139, 195, 74, 0.1);
    }
    
    .nav-menu > li > a i {
@@ -313,36 +380,38 @@ $category_tree = array_values($category_tree);
    
    /* Mega Menu */
    .mega-menu {
-      position: static !important;
+      position: relative;
    }
    
    .mega-menu-content {
       display: none;
       position: absolute;
       left: 0;
-      width: 100%;
-      background: var(--pure-white);
-      box-shadow: 0 1rem 1.5rem rgba(0,0,0,0.1);
+      top: 100%;
+      width: 380px;
+      background: #fff;
+      box-shadow: 0 6px 32px rgba(0,0,0,0.09);
+      border-radius: 0 0 1.2rem 1.2rem;
       z-index: 1000;
-      padding: 2.5rem;
-      border-top: 0.3rem solid var(--primary-green);
+      padding: 0;
+      margin: 0;
+      border: none;
    }
-   
-   .mega-menu.active .mega-menu-content {
-      display: flex;
+   .mega-menu:hover .mega-menu-content,
+   .mega-menu:focus-within .mega-menu-content {
+      display: block;
    }
-   
    .mega-menu-main-categories {
       width: 30rem;
-      border-right: 1px solid var(--medium-gray);
-      padding-right: 1.8rem;
+      border-right: none;
+      padding-right: 0;
    }
    
    .main-category {
       display: flex;
       align-items: center;
       padding: 1rem 1.2rem;
-      color: var(--text-dark);
+      color: var(--primary-green);
       text-decoration: none;
       margin-bottom: 0.6rem;
       border-radius: 0.6rem;
@@ -422,7 +491,7 @@ $category_tree = array_values($category_tree);
    .subcategory-column a {
       display: block;
       padding: 0.7rem 1.2rem;
-      color: var(--text-dark);
+      color: var(--primary-green);
       text-decoration: none;
       transition: var(--transition);
       border-radius: 0.4rem;
@@ -431,7 +500,7 @@ $category_tree = array_values($category_tree);
    }
    
    .subcategory-column a:hover {
-      color: var(--primary-green);
+      color: var(--dark-green);
       background-color: rgba(139, 195, 74, 0.1);
       transform: translateX(0.5rem);
    }
@@ -486,7 +555,7 @@ $category_tree = array_values($category_tree);
       display: flex;
       align-items: center;
       padding: 1.5rem 0;
-      color: var(--text-dark);
+      color: var(--primary-green);
       text-decoration: none;
       font-weight: 500;
       font-size: 1.6rem;
@@ -518,7 +587,7 @@ $category_tree = array_values($category_tree);
    }
    
    .mobile-submenu-link {
-      color: var(--text-medium);
+      color: var(--primary-green);
       text-decoration: none;
       display: block;
       padding: 0.5rem 0;
@@ -547,16 +616,12 @@ $category_tree = array_values($category_tree);
       }
       
       .mega-menu-content {
-         position: fixed;
-         top: 0;
-         left: 0;
-         width: 100%;
-         height: 100vh;
-         flex-direction: column;
-         overflow-y: auto;
-         z-index: 2100;
+         position: static !important;
+         width: 100vw !important;
+         max-width: 100vw !important;
+         border-radius: 0;
+         padding: 0.5rem 0;
       }
-      
       .mega-menu-main-categories {
          width: 100%;
          border-right: none;
@@ -621,6 +686,278 @@ $category_tree = array_values($category_tree);
          font-size: 1rem;
       }
    }
+   
+   /* Navigation links (header) as plain words, no background or border */
+   .nav-menu > li > a,
+   .mobile-nav-link {
+      background: none;
+      color: var(--primary-green);
+      font-weight: 600;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 1.2rem 1.5rem;
+      transition: color 0.2s;
+   }
+   .nav-menu > li > a:hover,
+   .mobile-nav-link:hover {
+      color: var(--dark-green);
+      background: none;
+   }
+
+   /* Categories and subcategories remain as buttons */
+   .main-category,
+   .subcategory-link,
+   .mobile-submenu-link {
+      background: var(--primary-green);
+      color: #fff;
+      border-radius: 0.4rem;
+      font-weight: 600;
+      border: none;
+      box-shadow: none;
+      transition: background 0.2s, color 0.2s;
+   }
+   .main-category:hover,
+   .subcategory-link:hover,
+   .mobile-submenu-link:hover {
+      background: var(--dark-green);
+      color: #fff;
+   }
+   
+   /* Remove default background for nav links to keep only color */
+   .nav-menu > li > a,
+   .main-category,
+   .subcategory-link,
+   .mobile-nav-link,
+   .mobile-submenu-link {
+      box-shadow: none;
+      border: none;
+   }
+   
+   .phone-btn {
+      background: none;
+      color: var(--primary-green) !important;
+      font-weight: 600;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 1.2rem 1.5rem;
+      transition: color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      letter-spacing: 0.03em;
+      margin-left: 0;
+      margin-right: 0;
+   }
+   .phone-btn:hover {
+      color: var(--dark-green) !important;
+      background: none;
+   }
+   
+   .offers-link {
+      color: var(--primary-green);
+      font-weight: 600;
+   }
+   .offers-link:hover {
+      color: var(--dark-green);
+   }
+   
+   .category-menu-wrapper {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+   }
+   .category-level {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      min-width: 200px;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-radius: 0.6rem;
+      padding: 0.5rem 0;
+      z-index: 999;
+   }
+   .category-level.level-0 {
+      position: static;
+      left: 0;
+      top: 0;
+      min-width: 200px;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      z-index: 1000;
+   }
+   .category-submenu {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      min-width: 200px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-radius: 0 0.6rem 0.6rem 0;
+      padding: 0.5rem 0;
+      z-index: 1000;
+      margin-left: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+   }
+
+   /* Mega Menu: Remove gap between main and submenu */
+   .mega-menu-content {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      min-width: unset;
+      width: auto;
+      background: #fff;
+      box-shadow: 0 1rem 1.5rem rgba(0,0,0,0.1);
+      border-radius: 0.8rem;
+      padding: 0;
+      margin: 0;
+      border: none;
+      z-index: 1000;
+   }
+   .category-menu-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: none;
+   }
+   .main-category-wrap {
+      position: relative;
+      display: block;
+      margin: 0;
+      padding: 0;
+      background: none;
+   }
+   .category-submenu {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      min-width: 220px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-radius: 0 0.6rem 0.6rem 0;
+      padding: 0.5rem 0;
+      z-index: 1001;
+      margin-left: 0;
+      border-left: none;
+   }
+   .main-category-wrap:hover > .category-submenu,
+   .main-category-wrap.open > .category-submenu {
+      display: block;
+   }
+   /* Remove right border-radius from main menu card for seamless look */
+   .mega-menu-content {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+   }
+   .category-submenu {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+   }
+
+   /* Remove inline display:none from PHP output if present */
+   .category-submenu {
+      margin-left: 0 !important;
+      border-left: none !important;
+      left: 100% !important;
+      top: 0 !important;
+      /* Remove any background or border that creates a visible line */
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-radius: 0 0.6rem 0.6rem 0;
+      padding: 0.5rem 0;
+      z-index: 1001;
+      min-width: 220px;
+   }
+   .main-category-wrap {
+      margin-bottom: 0;
+   }
+   .category-menu-wrapper {
+      gap: 0;
+   }
+   /* Ensure submenu is flush with main menu */
+   .main-category-wrap > .category-submenu {
+      left: 100% !important;
+      margin-left: 0 !important;
+   }
+
+   /* Remove the gap/line between main and submenus */
+   .category-submenu {
+      margin-left: 0 !important;
+      border-left: 0 !important;
+      left: 100% !important;
+      top: 0 !important;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+      border-radius: 0 0.6rem 0.6rem 0;
+      padding: 0.5rem 0;
+      z-index: 1001;
+      min-width: 220px;
+      /* Remove any ::before or ::after lines */
+   }
+   .main-category-wrap {
+      margin-bottom: 0;
+   }
+   .category-menu-wrapper {
+      gap: 0;
+   }
+   .main-category-wrap > .category-submenu {
+      left: 100% !important;
+      margin-left: 0 !important;
+   }
+   /* Remove connecting line if present */
+   .category-submenu::before,
+   .category-submenu::after {
+      display: none !important;
+      content: none !important;
+      background: none !important;
+      border: none !important;
+      width: 0 !important;
+      height: 0 !important;
+   }
+   /* Remove any border-right or border-left from main menu */
+   .main-category-link, .main-category-wrap {
+      border-right: none !important;
+      border-left: none !important;
+   }
+   .lime-btn {
+      background-color: var(--primary-green);
+      color: #fff;
+      border-radius: 0.4rem;
+      padding: 0.7rem 1.5rem;
+      border: none;
+      margin-left: 1rem;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+      display: inline-block;
+   }
+   .lime-btn:hover {
+      background-color: var(--dark-green);
+      color: #fff;
+      opacity: 0.9;
+   }
+   .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 1.2rem;
+   }
    </style>
 </head>
 <body>
@@ -629,17 +966,14 @@ $category_tree = array_values($category_tree);
    <div class="top-bar">
       <div class="container">
          <div class="contact-info">
-            <span><i class="fas fa-building"></i> SYOKICHEM</span>
-            <span><i class="fas fa-phone-alt"></i> <a href="tel:+254792914662">+254792914662</a></span>
-            <span><i class="fas fa-envelope"></i> <a href="mailto:sales@syokichem.com">sales@syokichem.com</a></span>
-            <span><i class="fas fa-globe"></i> <a href="https://www.syokichem.com">www.syokichem.com</a></span>
+            <!-- Brand name removed as requested -->
          </div>
          <div class="auth-links">
             <?php if(isset($user_id) && $user_id): ?>
                <a href="user_dashboard.php"><i class="fas fa-user-circle"></i> My Account</a>
             <?php else: ?>
-               <a href="user_login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
-               <a href="user_register.php"><i class="fas fa-user-plus"></i> Register</a>
+               <a href="user_login.php" class="lime-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+               <a href="user_register.php" class="lime-btn"><i class="fas fa-user-plus"></i> Register</a>
             <?php endif; ?>
          </div>
       </div>
@@ -674,7 +1008,6 @@ $category_tree = array_values($category_tree);
                   <?php endif; ?>
                </a>
             </div>
-            
             <button class="mobile-menu-toggle" id="mobileMenuToggle">
                <i class="fas fa-bars"></i>
             </button>
@@ -689,45 +1022,34 @@ $category_tree = array_values($category_tree);
             <li><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
             <li class="mega-menu">
                <a href="javascript:void(0)" class="shop-trigger"><i class="fas fa-pills"></i> Shop By Category <i class="fas fa-chevron-down"></i></a>
-               <div class="mega-menu-content">
-                  <div class="mega-menu-main-categories">
-                     <?php foreach($category_tree as $category): ?>
-                     <a href="category.php?category=<?= $category['slug'] ?>" class="main-category" data-target="category-<?= $category['id'] ?>">
-                        <i class="fas fa-chevron-right"></i>
-                        <?= htmlspecialchars($category['name']) ?>
-                     </a>
-                     <?php endforeach; ?>
-                  </div>
-                  <div class="mega-menu-subcategories">
-                     <?php foreach($category_tree as $category): ?>
-                     <div class="subcategory-group" id="category-<?= $category['id'] ?>">
-                        <div class="subcategory-column">
-                           <div class="subcategory-header">
-                              <h4><?= htmlspecialchars($category['name']) ?></h4>
-                           </div>
-                           <?php if(!empty($category['subcategories'])): ?>
-                           <div class="subcategory-list">
-                              <?php foreach($category['subcategories'] as $subcategory): ?>
-                              <a href="category.php?category=<?= $subcategory['slug'] ?>" class="subcategory-link">
-                                 <i class="fas fa-chevron-right"></i>
-                                 <?= htmlspecialchars($subcategory['name']) ?>
-                              </a>
-                              <?php endforeach; ?>
-                           </div>
-                           <?php else: ?>
-                           <p class="no-subcategories">No subcategories available</p>
-                           <?php endif; ?>
-                        </div>
-                     </div>
-                     <?php endforeach; ?>
+               <div class="mega-menu-content" style="position: absolute; left: 0; width: 380px; background: #fff; box-shadow: 0 1rem 1.5rem rgba(0,0,0,0.1); border-radius: 0.8rem; padding: 0; margin: 0; border: none; z-index: 1000;">
+                  <div class="category-menu-wrapper" style="position:relative;display:flex;flex-direction:column;">
+                    <?php foreach ($main_categories_full as $cat): ?>
+                    <div class="main-category-wrap" style="position:relative;display:block;">
+                        <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="main-category-link" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#8BC34A;padding:1rem 1.2rem;font-weight:600;">
+                            <?= htmlspecialchars($cat['name']) ?>
+                            <?php if (!empty($cat['children'])): ?>
+                                <i class="fas fa-chevron-right" style="margin-left: 0.7rem;"></i>
+                            <?php endif; ?>
+                        </a>
+                        <?php if (!empty($cat['children'])): ?>
+                            <div class="category-submenu" style="position:absolute;left:100%;top:0;">
+                                <?php renderCategoryLevel($cat['children'], 1, 10); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
                   </div>
                </div>
             </li>
-            <li><a href="prescription.php"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a></li>
-            <li><a href="telemedicine.php"><i class="fas fa-user-md"></i> Consult Doctor</a></li>
-            <li><a href="about.php"><i class="fas fa-info-circle"></i> About Us</a></li>
-            <li><a href="contact.php"><i class="fas fa-phone-alt"></i> Contact</a></li>
-            <li><a href="faq.php"><i class="fas fa-question-circle"></i> FAQs</a></li>
+            <li><a href="prescription.php"><i class="fas fa-prescription-bottle-alt"></i> Submit Prescription</a></li>
+            <li><a href="telemedicine.php"><i class="fas fa-user-md"></i> Book a Consultation</a></li>
+            <li><a href="special_offers.php" class="offers-link"><i class="fas fa-gift"></i> Offers</a></li>
+            <li>
+              <a href="tel:+254792914662" class="nav-link phone-btn">
+                <i class="fas fa-phone-alt"></i> +254792914662
+              </a>
+            </li>
          </ul>
       </div>
    </nav>
@@ -755,20 +1077,13 @@ $category_tree = array_values($category_tree);
             <i class="fas fa-chevron-down mobile-submenu-toggle"></i>
          </a>
          <ul class="mobile-submenu">
-            <?php foreach($category_tree as $category): ?>
+            <?php foreach ($main_categories as $cat): ?>
             <li class="mobile-submenu-item">
-               <a href="javascript:void(0)" class="mobile-nav-link mobile-subcategory-trigger">
-                  <?= htmlspecialchars($category['name']) ?>
-                  <i class="fas fa-chevron-down mobile-submenu-toggle"></i>
-               </a>
-               <?php if(!empty($category['subcategories'])): ?>
+               <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="mobile-submenu-link"><?= htmlspecialchars($cat['name']) ?></a>
+               <?php if (!empty($subcategories_by_parent[$cat['id']])): ?>
                <ul class="mobile-submenu">
-                  <?php foreach($category['subcategories'] as $subcategory): ?>
-                  <li class="mobile-submenu-item">
-                     <a href="category.php?category=<?= $subcategory['slug'] ?>" class="mobile-submenu-link">
-                        <?= htmlspecialchars($subcategory['name']) ?>
-                     </a>
-                  </li>
+                  <?php foreach ($subcategories_by_parent[$cat['id']] as $subcat): ?>
+                  <li class="mobile-submenu-item"><a href="shop.php?category=<?= htmlspecialchars($subcat['id']) ?>" class="mobile-submenu-link"><?= htmlspecialchars($subcat['name']) ?></a></li>
                   <?php endforeach; ?>
                </ul>
                <?php endif; ?>
@@ -776,150 +1091,151 @@ $category_tree = array_values($category_tree);
             <?php endforeach; ?>
          </ul>
       </li>
-      <li class="mobile-nav-item"><a href="prescription.php" class="mobile-nav-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a></li>
-      <li class="mobile-nav-item"><a href="telemedicine.php" class="mobile-nav-link"><i class="fas fa-user-md"></i> Consult Doctor</a></li>
-      <li class="mobile-nav-item"><a href="about.php" class="mobile-nav-link"><i class="fas fa-info-circle"></i> About Us</a></li>
-      <li class="mobile-nav-item"><a href="contact.php" class="mobile-nav-link"><i class="fas fa-phone-alt"></i> Contact</a></li>
-      <li class="mobile-nav-item"><a href="faq.php" class="mobile-nav-link"><i class="fas fa-question-circle"></i> FAQs</a></li>
+      <li class="mobile-nav-item"><a href="prescription.php" class="mobile-nav-link"><i class="fas fa-prescription-bottle-alt"></i> Submit Prescription</a></li>
+      <li class="mobile-nav-item"><a href="telemedicine.php" class="mobile-nav-link"><i class="fas fa-user-md"></i> Book a Consultation</a></li>
+      <li class="mobile-nav-item"><a href="special_offers.php" class="mobile-nav-link offers-link"><i class="fas fa-gift"></i> Offers</a></li>
+      <li class="mobile-nav-item">
+        <a href="tel:+254792914662" class="mobile-nav-link">
+          <i class="fas fa-phone-alt"></i> +254792914662
+        </a>
+      </li>
    </ul>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-   // Mobile Menu Toggle
-   const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-   const mobileNav = document.getElementById('mobileNav');
-   const mobileNavClose = document.getElementById('mobileNavClose');
-   
-   if (mobileMenuToggle && mobileNav) {
-      mobileMenuToggle.addEventListener('click', function() {
-         mobileNav.classList.add('active');
-      });
-   }
-   
-   if (mobileNavClose) {
-      mobileNavClose.addEventListener('click', function() {
-         mobileNav.classList.remove('active');
-      });
-   }
-   
-   // Mobile Submenu Toggle
-   const mobileTriggers = document.querySelectorAll('.mobile-category-trigger, .mobile-subcategory-trigger');
-   
-   mobileTriggers.forEach(trigger => {
-      trigger.addEventListener('click', function(e) {
-         e.preventDefault();
-         const parentItem = this.closest('.mobile-nav-item, .mobile-submenu-item');
-         const submenu = parentItem.querySelector('.mobile-submenu');
-         const icon = this.querySelector('.mobile-submenu-toggle');
-         
-         if (submenu) {
-            submenu.classList.toggle('active');
-            if (icon) {
-               icon.classList.toggle('fa-chevron-down');
-               icon.classList.toggle('fa-chevron-up');
-            }
-         }
-      });
-   });
-   
-   // Desktop Mega Menu
-   const shopTrigger = document.querySelector('.shop-trigger');
-   const megaMenu = document.querySelector('.mega-menu');
-   const categoryLinks = document.querySelectorAll('.main-category');
-   const subcategoryGroups = document.querySelectorAll('.subcategory-group');
-   
-   if (shopTrigger && megaMenu) {
-      shopTrigger.addEventListener('click', function(e) {
-         e.preventDefault();
-         megaMenu.classList.toggle('active');
-         
-         // Reset to first category when opening
-         if (megaMenu.classList.contains('active')) {
-            subcategoryGroups.forEach(group => group.classList.remove('active'));
-            if (subcategoryGroups.length > 0) {
-               subcategoryGroups[0].classList.add('active');
-            }
-         }
-      });
-   }
-   
-   categoryLinks.forEach(link => {
-      link.addEventListener('click', function(e) {
-         e.preventDefault();
-         const target = this.getAttribute('data-target');
-         
-         if (target) {
-            subcategoryGroups.forEach(group => group.classList.remove('active'));
-            document.getElementById(target)?.classList.add('active');
-         }
-      });
-   });
-   
-   // Close mega menu when clicking outside
-   document.addEventListener('click', function(e) {
-      if (!e.target.closest('.mega-menu') && !e.target.closest('.shop-trigger')) {
-         megaMenu.classList.remove('active');
+  // Mobile: accordion for all levels
+  if (window.innerWidth <= 992) {
+    document.querySelectorAll('.category-item').forEach(function(item) {
+      var link = item.querySelector('a');
+      var submenu = item.querySelector('.category-submenu');
+      if (submenu && link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          item.classList.toggle('expanded');
+        });
       }
-   });
-   
-   (function(){
-      const form = document.getElementById('headerSearchForm');
-      const input = form.querySelector('input[name="query"]');
-      const processingMsg = document.getElementById('searchProcessingMsg');
-      const resultsBox = document.getElementById('ajaxSearchResults');
+    });
+  }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+  const mobileNav = document.getElementById('mobileNav');
+  const mobileNavClose = document.getElementById('mobileNavClose');
+  
+  if (mobileMenuToggle && mobileNav) {
+    mobileMenuToggle.addEventListener('click', function() {
+      mobileNav.classList.add('active');
+    });
+  }
+  
+  if (mobileNavClose) {
+    mobileNavClose.addEventListener('click', function() {
+      mobileNav.classList.remove('active');
+    });
+  }
+  
+  // Mobile Submenu Toggle
+  const mobileTriggers = document.querySelectorAll('.mobile-category-trigger, .mobile-subcategory-trigger');
+  
+  mobileTriggers.forEach(trigger => {
+    trigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      const parentItem = this.closest('.mobile-nav-item, .mobile-submenu-item');
+      const submenu = parentItem.querySelector('.mobile-submenu');
+      const icon = this.querySelector('.mobile-submenu-toggle');
+      
+      if (submenu) {
+        submenu.classList.toggle('active');
+        if (icon) {
+          icon.classList.toggle('fa-chevron-down');
+          icon.classList.toggle('fa-chevron-up');
+        }
+      }
+    });
+  });
+  
+  // Close mega menu when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.mega-menu') && !e.target.closest('.shop-trigger')) {
+      megaMenuContent.style.display = 'none';
+    }
+  });
+  
+  (function(){
+    const form = document.getElementById('headerSearchForm');
+    const input = form.querySelector('input[name="query"]');
+    const processingMsg = document.getElementById('searchProcessingMsg');
+    const resultsBox = document.getElementById('ajaxSearchResults');
 
-      form.addEventListener('submit', function(e) {
-         e.preventDefault();
-         const query = input.value.trim();
-         if(!query) {
-            resultsBox.style.display = 'none';
-            return;
-         }
-         processingMsg.style.display = 'block';
-         resultsBox.innerHTML = '';
-         resultsBox.style.display = 'none';
-         fetch('ajax_search.php?query=' + encodeURIComponent(query))
-            .then(res => res.json())
-            .then(data => {
-               processingMsg.style.display = 'none';
-               if(data.products && data.products.length > 0) {
-                  let html = '<ul style="list-style:none;margin:0;padding:0;">';
-                  data.products.forEach(function(p){
-                     html += `<li style=\"display:flex;align-items:center;padding:0.7rem 1rem;border-bottom:1px solid #eee;\">
-                        <img src='uploaded_img/${p.image_01}' alt='${p.name}' style=\"width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:1rem;\">
-                        <div style=\"flex:1;\"><a href='quick_view.php?pid=${p.id}' style=\"font-weight:500;color:#222;text-decoration:none;\">${p.name}</a><br><span style=\"color:#689F38;font-size:1.2rem;\">KSh ${parseFloat(p.price).toLocaleString()}</span></div>
-                        <span style=\"margin-left:1rem;font-size:1.1rem;\">${p.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
-                     </li>`;
-                  });
-                  html += '</ul>';
-                  resultsBox.innerHTML = html;
-                  resultsBox.style.display = 'block';
-               } else {
-                  resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#888;">No products found.</div>';
-                  resultsBox.style.display = 'block';
-               }
-            })
-            .catch(()=>{
-               processingMsg.style.display = 'none';
-               resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#d32f2f;">Error searching. Try again.</div>';
-               resultsBox.style.display = 'block';
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const query = input.value.trim();
+      if(!query) {
+        resultsBox.style.display = 'none';
+        return;
+      }
+      processingMsg.style.display = 'block';
+      resultsBox.innerHTML = '';
+      resultsBox.style.display = 'none';
+      fetch('ajax_search.php?query=' + encodeURIComponent(query))
+        .then(res => res.json())
+        .then(data => {
+          processingMsg.style.display = 'none';
+          if(data.products && data.products.length > 0) {
+            let html = '<ul style="list-style:none;margin:0;padding:0;">';
+            data.products.forEach(function(p){
+              html += `<li style=\"display:flex;align-items:center;padding:0.7rem 1rem;border-bottom:1px solid #eee;\">
+                <img src='uploaded_img/${p.image_01}' alt='${p.name}' style=\"width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:1rem;\">
+                <div style=\"flex:1;\"><a href='quick_view.php?pid=${p.id}' style=\"font-weight:500;color:#222;text-decoration:none;\">${p.name}</a><br><span style=\"color:#689F38;font-size:1.2rem;\">KSh ${parseFloat(p.price).toLocaleString()}</span></div>
+                <span style=\"margin-left:1rem;font-size:1.1rem;\">${p.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
+              </li>`;
             });
-      });
-
-      // Hide results on outside click
-      document.addEventListener('click', function(e) {
-         if(!form.contains(e.target) && !resultsBox.contains(e.target)) {
-            resultsBox.style.display = 'none';
-         }
-      });
-      // Show results on focus if available
-      input.addEventListener('focus', function(){
-         if(resultsBox.innerHTML && resultsBox.innerHTML.trim() !== '') {
+            html += '</ul>';
+            resultsBox.innerHTML = html;
             resultsBox.style.display = 'block';
-         }
+          } else {
+            resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#888;">No products found.</div>';
+            resultsBox.style.display = 'block';
+          }
+        })
+        .catch(()=>{
+          processingMsg.style.display = 'none';
+          resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#d32f2f;">Error searching. Try again.</div>';
+          resultsBox.style.display = 'block';
+        });
+    });
+
+    // Hide results on outside click
+    document.addEventListener('click', function(e) {
+      if(!form.contains(e.target) && !resultsBox.contains(e.target)) {
+        resultsBox.style.display = 'none';
+      }
+    });
+    // Show results on focus if available
+    input.addEventListener('focus', function(){
+      if(resultsBox.innerHTML && resultsBox.innerHTML.trim() !== '') {
+        resultsBox.style.display = 'block';
+      }
+    });
+  })();
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only apply this on desktop
+  if (window.innerWidth > 992) {
+    document.querySelectorAll('.main-category-wrap').forEach(function(item) {
+      item.addEventListener('mouseenter', function() {
+        item.classList.add('open');
       });
-   })();
+      item.addEventListener('mouseleave', function() {
+        item.classList.remove('open');
+      });
+    });
+  }
 });
 </script>
 </body>

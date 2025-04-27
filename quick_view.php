@@ -112,11 +112,13 @@ if(isset($_POST['add_to_cart'])) {
                 <input type="hidden" name="price" value="<?= htmlspecialchars($product['price']) ?>">
                 <input type="hidden" name="image" value="<?= htmlspecialchars($product['image_01']) ?>">
                 <input type="hidden" name="qty" value="1">
-                <img src="uploaded_img/<?= htmlspecialchars($product['image_01']) ?>"
-                     alt="<?= htmlspecialchars($product['name']) ?>"
-                     class="quickview-img"
+                <img class="quickview-img" src="images/products/<?= htmlspecialchars($product['image_01']) ?>" alt="<?= htmlspecialchars($product['name']) ?>"
                      onerror="if(!this._errored){this._errored=true;this.src='images/place.jpg';}">
-                <div class="quickview-title"><?= htmlspecialchars($product['name']) ?></div>
+                <div class="quickview-title">
+                    <a href="product_details.php?pid=<?= $product['id'] ?>" style="color:inherit;text-decoration:none;">
+                        <?= htmlspecialchars($product['name']) ?>
+                    </a>
+                </div>
                 <div class="quickview-price">KSh <?= number_format($product['price'], 2) ?></div>
                 <?php if (isset($product['details']) && $product['details'] !== null && $product['details'] !== ''): ?>
                     <div class="quickview-desc">Description: <?= nl2br(htmlspecialchars($product['details'])) ?></div>
@@ -157,7 +159,7 @@ if(isset($_POST['add_to_cart'])) {
         <div class="more-products-grid">
             <?php foreach ($more_products as $mp): ?>
                 <div class="more-product">
-                    <img src="uploaded_img/<?= htmlspecialchars($mp['image_01']) ?>" alt="<?= htmlspecialchars($mp['name']) ?>" onerror="if(!this._errored){this._errored=true;this.src='images/place.jpg';}">
+                    <img src="images/products/<?= htmlspecialchars($mp['image_01']) ?>" alt="<?= htmlspecialchars($mp['name']) ?>" onerror="if(!this._errored){this._errored=true;this.src='images/place.jpg';}">
                     <div class="name"><?= htmlspecialchars($mp['name']) ?></div>
                     <div class="price">KSh <?= number_format($mp['price'], 2) ?></div>
                     <div class="desc">Description: <?= htmlspecialchars(mb_strimwidth($mp['details'] ?? '', 0, 60, '...')) ?></div>

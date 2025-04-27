@@ -9,11 +9,11 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../components/connect.php';
 
 // Check if user is authorized
-//if (!isset($_SESSION['admin_id'])) {
-    //$_SESSION['error'] = 'Unauthorized access';
-    //header('Location: ../login.php');
-    ////exit();
-//}
+////if (!isset($_SESSION['admin_id'])) {
+//    $_SESSION['error'] = 'Unauthorized access';
+//    header('Location: ../login.php');
+//    ////exit();
+////}
 
 // Handle bulk actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
@@ -205,7 +205,7 @@ include __DIR__ . '/../includes/admin_header.php';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" action="delete.php" method="POST" style="display: inline;">
+                <form id="deleteForm" action="delete.php" method="GET" style="display: inline;">
                     <input type="hidden" name="id" id="deleteUserId">
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
@@ -213,6 +213,11 @@ include __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 </div>
+
+<!-- jQuery (required for DataTables and some Bootstrap plugins) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap 5 Bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

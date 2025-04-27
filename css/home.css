@@ -1561,3 +1561,33 @@
         font-size: 1.4rem;
     }
 }
+
+/* PRODUCT IMAGE SIZING FOR INDEX */
+.home-products .swiper-slide img,
+.special-offers .swiper-slide img {
+  max-width: 220px;
+  max-height: 220px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto 1rem auto;
+  display: block;
+  background: var(--white);
+  border-radius: 0.8rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 0.5rem;
+  transition: transform 0.18s;
+}
+.home-products .swiper-slide img:hover,
+.special-offers .swiper-slide img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+@media (max-width: 600px) {
+  .home-products .swiper-slide img,
+  .special-offers .swiper-slide img {
+    max-width: 90vw;
+    max-height: 140px;
+    padding: 0.3rem;
+  }
+}

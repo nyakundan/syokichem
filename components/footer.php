@@ -6,10 +6,11 @@
             <h3 class="footer-heading">Syokichem Services</h3>
             <ul class="footer-links">
                <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
-               <li><a href="prescription.php"><i class="fas fa-chevron-right"></i> Prescription Upload</a></li>
-               <li><a href="telemedicine.php"><i class="fas fa-chevron-right"></i> Doctor Consultation</a></li>
+               <li><a href="prescription.php"><i class="fas fa-chevron-right"></i> Submit a Prescription</a></li>
+               <li><a href="telemedicine.php"><i class="fas fa-chevron-right"></i> Book a Consultation</a></li>
                <li><a href="about.php"><i class="fas fa-chevron-right"></i> About Us</a></li>
                <li><a href="contact.php"><i class="fas fa-chevron-right"></i> Contact</a></li>
+               <li><a href="faq.php"><i class="fas fa-chevron-right"></i> FAQs</a></li>
             </ul>
          </div>
 
@@ -25,15 +26,12 @@
          </div>
 
          <div class="footer-column">
-            <h3 class="footer-heading">Company Info & Customer Care</h3>
+            <h3 class="footer-heading">Company Info</h3>
             <ul class="footer-contact">
-               <li><i class="fas fa-building"></i> SYOKICHEM</li>
                <li><i class="fas fa-envelope"></i> <a href="mailto:sales@syokichem.com">sales@syokichem.com</a></li>
                <li><i class="fas fa-globe"></i> <a href="https://www.syokichem.com">www.syokichem.com</a></li>
                <li><i class="fas fa-phone-alt"></i> <a href="tel:+254792914662">+254792914662</a></li>
-               <li><i class="fas fa-clock"></i> Mon-Sat: 8:00 AM - 8:00 PM</li>
                <li><a href="https://maps.google.com/?q=Nairobi,Kenya" target="_blank"><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</a></li>
-               <li><a href="faq.php"><i class="fas fa-question-circle"></i> FAQs</a></li>
             </ul>
          </div>
 
@@ -74,11 +72,11 @@
                </ul>
             </div>
             <div style="flex:1 1 380px;min-width:280px;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(139,195,74,0.09);padding:2.2rem 2.1rem 1.7rem 2.1rem;">
-               <h3 style="color:#689F38;font-size:2.2rem;font-weight:800;margin-bottom:1.5rem;letter-spacing:0.01em;">Contact & Hours</h3>
+               <h3 style="color:#689F38;font-size:2.2rem;font-weight:800;margin-bottom:1.5rem;letter-spacing:0.01em;">Contact Us</h3>
                <ul style="list-style:none;padding:0;margin:0;">
                   <li style="margin-bottom:1.1rem;font-size:1.5rem;color:#222;font-weight:700;"><strong style='color:#689F38;'>Head Office:</strong> <span style='font-weight:600;color:#222;'>Westlands Square, Woodvale Lane</span></li>
-                  <li style="margin-bottom:1.1rem;font-size:1.5rem;color:#222;font-weight:700;"><strong style='color:#689F38;'>Working Hours:</strong> <span style='font-weight:600;color:#222;'>Mon-Sat: 8:00 AM - 8:00 PM</span></li>
                   <li style="margin-bottom:1.1rem;font-size:1.5rem;color:#222;font-weight:700;"><strong style='color:#689F38;'>Map:</strong> <a href="https://maps.google.com/?q=Nairobi,Kenya" target="_blank" style="color:#689F38;text-decoration:underline;font-weight:700;">View on Google Maps</a></li>
+                  <li style="margin-bottom:1.1rem;font-size:1.5rem;color:#222;font-weight:700;"><strong style='color:#689F38;'>Open Hours:</strong> <span style='font-weight:600;color:#222;'>Mon - Sat: 8:00am - 8:00pm, Sun & Holidays: 9:00am - 6:00pm</span></li>
                </ul>
             </div>
          </div>
@@ -102,11 +100,8 @@
          </div>
       </div>
    </div>
+   <?php include 'components/cookie_consent.php'; ?>
 </footer>
-
-<link rel="stylesheet" href="chat_popup.css">
-<!-- Live Chat Popup -->
-<script src="chat_popup.js"></script>
 
 <style>
    :root {

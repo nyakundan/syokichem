@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-//require 'C:/xampp/htdocs/ecommerce website/admin/includes/auth.php';
-//require 'C:/xampp/htdocs/ecommerce website/admin/components/connect.php';
+//require 'C:/xampp/htdocs/syokichem/admin/includes/auth.php';
+//require 'C:/xampp/htdocs/syokichem/admin/components/connect.php';
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../components/connect.php';
 

@@ -1,14 +1,15 @@
 <?php
-// Enable all error reporting at the very top
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+declare(strict_types=1);
 
-// Start session if not already started
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Start session and check authentication
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include authentication and database connection
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../components/connect.php';
 
@@ -18,38 +19,58 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header('Location: list.php');
     exit();
 }
-
 $productId = (int)$_GET['id'];
 
-// Get dropdown options
-try {
-    $categories = $conn->query("SELECT id, name FROM product_categories ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-    $suppliers = $conn->query("SELECT id, name FROM suppliers ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Error fetching dropdown options: " . $e->getMessage());
-}
+// Fetch all categories for dropdown
+$categories = $conn->query("SELECT id, name, parent_id FROM product_categories ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
 
-// Get current product data
-try {
-    $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
-    $stmt->execute([$productId]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$product) {
-        $_SESSION['error'] = 'Product not found';
-        header('Location: list.php');
-        exit();
+function buildCategoryTree($elements, $parentId = null) {
+    $branch = [];
+    foreach ($elements as $element) {
+        if ($element['parent_id'] == $parentId) {
+            $children = buildCategoryTree($elements, $element['id']);
+            $element['children'] = $children;
+            $branch[] = $element;
+        }
     }
-} catch (PDOException $e) {
-    die("Error fetching product: " . $e->getMessage());
+    return $branch;
 }
 
-// Initialize form data
+function getLeafCategories($categories, &$leaf = []) {
+    foreach ($categories as $cat) {
+        if (empty($cat['children'])) {
+            $leaf[] = $cat;
+        } else {
+            getLeafCategories($cat['children'], $leaf);
+        }
+    }
+    return $leaf;
+}
+
+$category_tree = buildCategoryTree($categories);
+$leaf_categories = getLeafCategories($category_tree);
+
+// Get dropdown options
+$suppliers = $conn->query("SELECT id, name FROM suppliers ORDER BY name")->fetchAll();
+
+// Fetch product to edit
+$stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+$stmt->execute([$productId]);
+$product = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$product) {
+    $_SESSION['error'] = 'Product not found';
+    header('Location: list.php');
+    exit();
+}
+
+// Initialize form data with existing product values
 $formData = [
     'name' => $product['name'] ?? '',
+    'slug' => $product['slug'] ?? '',
     'category_id' => $product['category_id'] ?? '',
-    'product_type' => $product['product_type'] ?? 'otc',
-    'price' => $product['price'] ?? 0,
+    'category' => $product['category'] ?? '',
+    'price' => $product['price'] ?? '',
+    'status' => $product['status'] ?? 'active',
     'description' => $product['description'] ?? '',
     'ingredients' => $product['ingredients'] ?? '',
     'dosage' => $product['dosage'] ?? '',
@@ -57,131 +78,63 @@ $formData = [
     'supplier_id' => $product['supplier_id'] ?? '',
     'requires_prescription' => $product['requires_prescription'] ?? 0,
     'max_quantity' => $product['max_quantity'] ?? 5,
-    'stock' => $product['stock'] ?? 0,
-    'status' => $product['status'] ?? 'active',
     'sales' => $product['sales'] ?? 0,
-    'image_01' => $product['image_01'] ?? 'default-product.jpg',
+    'stock' => $product['stock'] ?? '',
+    'how_to_use' => $product['how_to_use'] ?? '',
+    'precautions' => $product['precautions'] ?? '',
+    'image_01' => $product['image_01'] ?? '',
     'image_02' => $product['image_02'] ?? '',
     'image_03' => $product['image_03'] ?? '',
 ];
 
 $errors = [];
 
-// Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and validate input
     $formData = [
         'name' => trim($_POST['name'] ?? ''),
-        'category_id' => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
-        'product_type' => $_POST['product_type'] ?? 'otc',
+        'slug' => trim($_POST['slug'] ?? ''),
+        'category_id' => $_POST['category_id'] ?? null,
+        'category' => trim($_POST['category'] ?? ''),
         'price' => (float)($_POST['price'] ?? 0),
+        'status' => $_POST['status'] ?? 'active',
         'description' => trim($_POST['description'] ?? ''),
         'ingredients' => trim($_POST['ingredients'] ?? ''),
         'dosage' => trim($_POST['dosage'] ?? ''),
         'manufacturer' => trim($_POST['manufacturer'] ?? ''),
-        'supplier_id' => !empty($_POST['supplier_id']) ? (int)$_POST['supplier_id'] : null,
+        'supplier_id' => $_POST['supplier_id'] ?? null,
         'requires_prescription' => isset($_POST['requires_prescription']) ? 1 : 0,
         'max_quantity' => (int)($_POST['max_quantity'] ?? 5),
-        'stock' => (int)($_POST['stock'] ?? 0),
-        'status' => $_POST['status'] ?? 'active',
         'sales' => (int)($_POST['sales'] ?? 0),
-        'image_01' => $product['image_01'],
-        'image_02' => $product['image_02'],
-        'image_03' => $product['image_03'],
+        'stock' => (int)($_POST['stock'] ?? 0),
+        'how_to_use' => trim($_POST['how_to_use'] ?? ''),
+        'precautions' => trim($_POST['precautions'] ?? ''),
+        'image_01' => $product['image_01'] ?? '',
+        'image_02' => $product['image_02'] ?? '',
+        'image_03' => $product['image_03'] ?? '',
     ];
 
     // Validate required fields
     if (empty($formData['name'])) {
         $errors[] = 'Product name is required';
     }
-    
-    if (empty($formData['category_id'])) {
-        $errors[] = 'Category is required';
-    }
-    
     if ($formData['price'] <= 0) {
-        $errors[] = 'Price must be greater than 0';
+        $errors[] = 'Price must be a positive number';
     }
-    
     if ($formData['stock'] < 0) {
-        $errors[] = 'Stock cannot be negative';
+        $errors[] = 'Stock quantity cannot be negative';
     }
 
     // Process if no errors
     if (empty($errors)) {
         try {
             $conn->beginTransaction();
-
-            // Handle image upload if new file was provided
-            if (!empty($_FILES['image_01']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                
-                // Create upload directory if it doesn't exist
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                
-                // Generate unique filename
-                $fileExt = pathinfo($_FILES['image_01']['name'], PATHINFO_EXTENSION);
-                $fileName = 'product_' . $productId . '_' . uniqid() . '.' . $fileExt;
-                $targetFile = $uploadDir . $fileName;
-                
-                // Move uploaded file
-                if (move_uploaded_file($_FILES['image_01']['tmp_name'], $targetFile)) {
-                    // Delete old image if it's not the default
-                    if ($formData['image_01'] !== 'default-product.jpg') {
-                        $oldImagePath = __DIR__ . '/../../' . $formData['image_01'];
-                        if (file_exists($oldImagePath)) {
-                            unlink($oldImagePath);
-                        }
-                    }
-                    $formData['image_01'] = 'images/products/' . $fileName;
-                } else {
-                    throw new Exception('Failed to upload product image');
-                }
-            }
-            if (!empty($_FILES['image_02']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                $fileName2 = 'product_' . $productId . '_' . uniqid() . '_' . basename($_FILES['image_02']['name']);
-                $targetFile2 = $uploadDir . $fileName2;
-                if (move_uploaded_file($_FILES['image_02']['tmp_name'], $targetFile2)) {
-                    $formData['image_02'] = 'images/products/' . $fileName2;
-                }
-            }
-            if (!empty($_FILES['image_03']['name'])) {
-                $uploadDir = __DIR__ . '/../../images/products/';
-                $fileName3 = 'product_' . $productId . '_' . uniqid() . '_' . basename($_FILES['image_03']['name']);
-                $targetFile3 = $uploadDir . $fileName3;
-                if (move_uploaded_file($_FILES['image_03']['tmp_name'], $targetFile3)) {
-                    $formData['image_03'] = 'images/products/' . $fileName3;
-                }
-            }
-
-            // Update product
-            $stmt = $conn->prepare("UPDATE products SET
-                name = ?,
-                product_type = ?,
-                category_id = ?,
-                price = ?,
-                status = ?,
-                description = ?,
-                ingredients = ?,
-                dosage = ?,
-                manufacturer = ?,
-                supplier_id = ?,
-                requires_prescription = ?,
-                max_quantity = ?,
-                stock = ?,
-                image_01 = ?,
-                image_02 = ?,
-                image_03 = ?,
-                sales = ?
-                WHERE id = ?");
-
+            $stmt = $conn->prepare("UPDATE products SET name=?, slug=?, category_id=?, category=?, price=?, status=?, description=?, ingredients=?, dosage=?, manufacturer=?, supplier_id=?, requires_prescription=?, max_quantity=?, sales=?, stock=?, how_to_use=?, precautions=? WHERE id=?");
             $stmt->execute([
                 $formData['name'],
-                $formData['product_type'],
+                $formData['slug'],
                 $formData['category_id'],
+                $formData['category'],
                 $formData['price'],
                 $formData['status'],
                 $formData['description'],
@@ -191,24 +144,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $formData['supplier_id'],
                 $formData['requires_prescription'],
                 $formData['max_quantity'],
-                $formData['stock'],
-                $formData['image_01'],
-                $formData['image_02'],
-                $formData['image_03'],
                 $formData['sales'],
+                $formData['stock'],
+                $formData['how_to_use'],
+                $formData['precautions'],
                 $productId
             ]);
-
             $conn->commit();
-            $_SESSION['success'] = 'Product updated successfully';
+            $_SESSION['success'] = 'Product updated successfully!';
             header('Location: list.php');
             exit();
-            
         } catch (PDOException $e) {
             $conn->rollBack();
+            error_log("Database Error: " . $e->getMessage());
             $errors[] = 'Database error: ' . $e->getMessage();
         } catch (Exception $e) {
             $conn->rollBack();
+            error_log("General Error: " . $e->getMessage());
             $errors[] = $e->getMessage();
         }
     }
@@ -219,405 +171,176 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Product - Admin Panel</title>
-    <!-- Include admin header for consistent styling -->
-    <?php include __DIR__ . '/../includes/admin_header.php'; ?>
+    <title>Edit Product</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Minimal reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        h1, h2, h3 {
-            margin-bottom: 15px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        textarea {
-            min-height: 100px;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 8px 15px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-        }
-        
-        .alert {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-        
-        .current-image {
-            max-width: 150px;
-            max-height: 150px;
-            margin-top: 10px;
-        }
-        
-        .image-preview {
-            max-width: 200px;
-            max-height: 200px;
-            margin-top: 10px;
-        }
-        
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin: 0 -10px;
-        }
-        
-        .col-md-6 {
-            flex: 0 0 50%;
-            padding: 0 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .col-md-6 {
-                flex: 0 0 100%;
-            }
-        }
+        .required:after { content: " *"; color: red; }
+        .image-preview { max-width: 200px; max-height: 200px; margin-top: 1rem; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Edit Product</h1>
-            <a href="list.php" class="btn btn-secondary">Back to Products</a>
+<?php include __DIR__ . '/../includes/admin_header.php'; ?>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Edit Product</h1>
+        <a href="list.php" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Products</a>
+    </div>
+    <?php if (!empty($errors)): ?>
+        <div class="alert alert-danger">
+            <?php foreach ($errors as $error): ?>
+                <p class="mb-1"><?= htmlspecialchars($error) ?></p>
+            <?php endforeach; ?>
         </div>
-
-        <?php if (!empty($errors)): ?>
-            <div class="alert alert-danger">
-                <h3>Please fix the following errors:</h3>
-                <ul>
-                    <?php foreach ($errors as $error): ?>
-                        <li><?= htmlspecialchars($error) ?></li>
-                    <?php endforeach; ?>
-                </ul>
+    <?php endif; ?>
+    <?php
+    // Debug output for formData and suppliers
+    echo '<pre style="background:#fff;color:#000;z-index:9999;position:relative;">';
+    var_dump($formData);
+    echo "\n";
+    if (isset($suppliers)) var_dump($suppliers);
+    echo '</pre>';
+    ?>
+    <form method="POST" class="form-container">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="name" class="form-label required">Product Name</label>
+                <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($formData['name']) ?>" required>
             </div>
-        <?php endif; ?>
-
-        <form method="POST" enctype="multipart/form-data">
-            <h2>Basic Information</h2>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="name">Product Name *</label>
-                        <input type="text" id="name" name="name" 
-                               value="<?= htmlspecialchars($formData['name']) ?>" required>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="product_type">Product Type *</label>
-                        <select id="product_type" name="product_type" required>
-                            <option value="prescription" <?= $formData['product_type'] === 'prescription' ? 'selected' : '' ?>>Prescription</option>
-                            <option value="otc" <?= $formData['product_type'] === 'otc' ? 'selected' : '' ?>>Over-the-Counter</option>
-                            <option value="wellness" <?= $formData['product_type'] === 'wellness' ? 'selected' : '' ?>>Wellness</option>
-                            <option value="medical_device" <?= $formData['product_type'] === 'medical_device' ? 'selected' : '' ?>>Medical Device</option>
-                        </select>
-                    </div>
+            <div class="form-group col-md-6">
+                <label for="slug" class="form-label">Slug</label>
+                <input type="text" class="form-control" id="slug" name="slug" value="<?= htmlspecialchars($formData['slug']) ?>">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="price" class="form-label required">Selling Price</label>
+                <div class="input-group">
+                    <span class="input-group-text">KSh</span>
+                    <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="<?= htmlspecialchars($formData['price']) ?>" required>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="category_id">Category *</label>
-                        <select id="category_id" name="category_id" required>
-                            <option value="">Select Category</option>
-                            <?php foreach ($categories as $cat): ?>
-                                <option value="<?= $cat['id'] ?>" <?= $formData['category_id'] == $cat['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($cat['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="supplier_id">Supplier</label>
-                        <select id="supplier_id" name="supplier_id">
-                            <option value="">Select Supplier</option>
-                            <?php foreach ($suppliers as $supplier): ?>
-                                <option value="<?= $supplier['id'] ?>" <?= $formData['supplier_id'] == $supplier['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($supplier['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
+            <div class="form-group col-md-4">
+                <label for="stock" class="form-label required">Current Stock</label>
+                <input type="number" class="form-control" id="stock" name="stock" min="0" value="<?= htmlspecialchars($formData['stock']) ?>" required>
             </div>
-
-            <h2>Pricing & Inventory</h2>
-            
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="price">Price *</label>
-                        <input type="number" id="price" name="price" 
-                               step="0.01" min="0.01" value="<?= htmlspecialchars($formData['price']) ?>" required>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="stock">Current Stock *</label>
-                        <input type="number" id="stock" name="stock" 
-                               min="0" value="<?= htmlspecialchars($formData['stock']) ?>" required>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="max_quantity">Max Order Quantity</label>
-                        <input type="number" id="max_quantity" name="max_quantity" 
-                               min="1" value="<?= htmlspecialchars($formData['max_quantity']) ?>">
-                    </div>
-                </div>
+            <div class="form-group col-md-4">
+                <label for="max_quantity" class="form-label">Max Quantity per Order</label>
+                <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="1" value="<?= htmlspecialchars($formData['max_quantity']) ?>">
             </div>
-            
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="requires_prescription" value="1" 
-                           <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
-                    Requires Prescription
-                </label>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="sales" class="form-label">Sales</label>
+                <input type="number" class="form-control" id="sales" name="sales" min="0" value="<?= htmlspecialchars((string)$formData['sales']) ?>">
             </div>
-
-            <h2>Product Details</h2>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="manufacturer">Manufacturer</label>
-                        <input type="text" id="manufacturer" name="manufacturer"
-                               value="<?= htmlspecialchars($formData['manufacturer']) ?>">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description"><?= 
-                    htmlspecialchars($formData['description']) 
-                ?></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="ingredients">Ingredients</label>
-                <textarea id="ingredients" name="ingredients"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="dosage">Dosage</label>
-                <input type="text" id="dosage" name="dosage" value="<?= htmlspecialchars($formData['dosage']) ?>">
-            </div>
-            
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status">
+            <div class="form-group col-md-6">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
                     <option value="active" <?= $formData['status']==='active'?'selected':'' ?>>Active</option>
                     <option value="inactive" <?= $formData['status']==='inactive'?'selected':'' ?>>Inactive</option>
                 </select>
             </div>
-            
-            <div class="form-group">
-                <label for="sales">Sales</label>
-                <input type="number" id="sales" name="sales" min="0" value="<?= htmlspecialchars($formData['sales']) ?>">
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="category_id" class="form-label required">Category</label>
+                <input type="hidden" name="category" value="<?= htmlspecialchars($formData['category']) ?>">
+                <select class="form-select" id="category_id" name="category_id" required>
+                    <option value="">Select Category</option>
+                    <option value="10" <?= $formData['category_id']==10?'selected':'' ?>>Test Category</option>
+                </select>
             </div>
-
-            <h2>Product Images</h2>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="image_01">Main Product Image</label>
-                        <input type="file" id="image_01" name="image_01" accept="image/*">
-                        
-                        <div id="imagePreview" class="image-preview"></div>
-                    </div>
+            <div class="form-group col-md-6">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="supplier_id" class="form-label">Supplier</label>
+                <select class="form-select" id="supplier_id" name="supplier_id">
+                    <option value="">Select Supplier</option>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <option value="<?= $supplier['id'] ?>" <?= $formData['supplier_id'] == $supplier['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($supplier['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="requires_prescription" class="form-label">Requires Prescription</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription" <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="requires_prescription">Yes</label>
                 </div>
-                
-                <div class="col-md-6">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="manufacturer" class="form-label">Manufacturer</label>
+                <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="<?= htmlspecialchars($formData['manufacturer']) ?>">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="ingredients" class="form-label">Ingredients</label>
+                <textarea class="form-control" id="ingredients" name="ingredients"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="dosage" class="form-label">Dosage</label>
+                <textarea class="form-control" id="dosage" name="dosage"><?= htmlspecialchars($formData['dosage']) ?></textarea>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="how_to_use" class="form-label">How to Use</label>
+                <textarea class="form-control" id="how_to_use" name="how_to_use"><?= htmlspecialchars($formData['how_to_use']) ?></textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="precautions" class="form-label">Precautions</label>
+                <textarea class="form-control" id="precautions" name="precautions"><?= htmlspecialchars($formData['precautions']) ?></textarea>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="image_01" class="form-label">Image 1</label>
+                <input type="file" class="form-control" id="image_01" name="image_01" accept="image/*">
+                <div id="imagePreview01" class="image-preview">
                     <?php if (!empty($formData['image_01'])): ?>
-                        <div class="form-group">
-                            <label>Current Image</label>
-                            <div>
-                                <img src="<?= htmlspecialchars($formData['image_01']) ?>" 
-                                     class="current-image" alt="Current Product Image">
-                            </div>
-                        </div>
+                        <img src="../../images/products/<?= htmlspecialchars($formData['image_01']) ?>" class="img-thumbnail" alt="Current Image 1">
                     <?php endif; ?>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="image_02">Image 2</label>
-                        <input type="file" id="image_02" name="image_02" accept="image/*">
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
+            <div class="form-group col-md-4">
+                <label for="image_02" class="form-label">Image 2</label>
+                <input type="file" class="form-control" id="image_02" name="image_02" accept="image/*">
+                <div id="imagePreview02" class="image-preview">
                     <?php if (!empty($formData['image_02'])): ?>
-                        <div class="form-group">
-                            <label>Current Image 2</label>
-                            <div>
-                                <img src="<?= htmlspecialchars($formData['image_02']) ?>" 
-                                     class="current-image" alt="Current Product Image 2">
-                            </div>
-                        </div>
+                        <img src="../../images/products/<?= htmlspecialchars($formData['image_02']) ?>" class="img-thumbnail" alt="Current Image 2">
                     <?php endif; ?>
                 </div>
             </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="image_03">Image 3</label>
-                        <input type="file" id="image_03" name="image_03" accept="image/*">
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
+            <div class="form-group col-md-4">
+                <label for="image_03" class="form-label">Image 3</label>
+                <input type="file" class="form-control" id="image_03" name="image_03" accept="image/*">
+                <div id="imagePreview03" class="image-preview">
                     <?php if (!empty($formData['image_03'])): ?>
-                        <div class="form-group">
-                            <label>Current Image 3</label>
-                            <div>
-                                <img src="<?= htmlspecialchars($formData['image_03']) ?>" 
-                                     class="current-image" alt="Current Product Image 3">
-                            </div>
-                        </div>
+                        <img src="../../images/products/<?= htmlspecialchars($formData['image_03']) ?>" class="img-thumbnail" alt="Current Image 3">
                     <?php endif; ?>
                 </div>
             </div>
-
-            <div class="form-group" style="margin-top: 20px;">
-                <button type="submit" class="btn">Update Product</button>
-                <a href="list.php" class="btn btn-secondary">Cancel</a>
+        </div>
+        <div class="form-row">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-save me-2"></i>Update Product
+                </button>
             </div>
-        </form>
-    </div>
-
+        </div>
+    </form>
     <?php include __DIR__ . '/../includes/admin_footer.php'; ?>
-    
-    <script>
-        // Image preview functionality
-        document.getElementById('image_01').addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
-            
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.maxWidth = '100%';
-                    img.style.maxHeight = '200px';
-                    preview.appendChild(img);
-                }
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-
-        // Basic form validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            let isValid = true;
-            
-            // Check required fields
-            const requiredFields = [
-                document.getElementById('name'),
-                document.getElementById('product_type'),
-                document.getElementById('category_id'),
-                document.getElementById('price'),
-                document.getElementById('stock')
-            ];
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.style.borderColor = 'red';
-                    isValid = false;
-                } else {
-                    field.style.borderColor = '';
-                }
-            });
-            
-            if (!isValid) {
-                e.preventDefault();
-                alert('Please fill in all required fields');
-            }
-        });
-    </script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

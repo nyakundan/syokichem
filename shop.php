@@ -125,14 +125,36 @@ if(isset($message)){
 
 <section class="products">
 
-   <h1 class="heading">latest products</h1>
+   <h1 class="heading">Products</h1>
 
    <div class="box-container">
 
    <?php
-     $select_products = $conn->prepare("SELECT * FROM `products`"); 
-     $select_products->execute();
-     if($select_products->rowCount() > 0){
+   // Filter products by category if set
+   $where = '';
+   $params = [];
+   if (isset($_GET['category']) && is_numeric($_GET['category'])) {
+      $cat_id = (int)$_GET['category'];
+      // Get all descendant category IDs (subcategories, sub-subcategories)
+      function getDescendantCategoryIds($conn, $parent_id) {
+         $ids = [$parent_id];
+         $stmt = $conn->prepare("SELECT id FROM product_categories WHERE parent_id = ?");
+         $stmt->execute([$parent_id]);
+         $children = $stmt->fetchAll(PDO::FETCH_COLUMN);
+         foreach ($children as $child_id) {
+            $ids = array_merge($ids, getDescendantCategoryIds($conn, $child_id));
+         }
+         return $ids;
+      }
+      $cat_ids = getDescendantCategoryIds($conn, $cat_id);
+      $in_placeholders = implode(',', array_fill(0, count($cat_ids), '?'));
+      $where = "WHERE category_id IN ($in_placeholders)";
+      $params = $cat_ids;
+   }
+
+   $select_products = $conn->prepare("SELECT * FROM `products` $where");
+   $select_products->execute($params);
+   if($select_products->rowCount() > 0){
       while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
    ?>
    <form action="" method="post" class="box">
@@ -141,10 +163,9 @@ if(isset($message)){
       <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
       <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
       <input type="hidden" name="qty" value="1">
-      <!-- <button class="fas fa-heart" type="submit" name="add_to_wishlist"></button> -->
       <a href="quick_view.php?pid=<?= $fetch_product['id']; ?>" class="fas fa-eye"></a>
-      <img src="uploaded_img/<?= $fetch_product['image_01']; ?>" alt="">
-      <div class="name"><?= $fetch_product['name']; ?></div>
+      <img src="images/products/<?= $fetch_product['image_01']; ?>" alt="<?= htmlspecialchars($fetch_product['name']); ?>">
+      <div class="name"><a href="product_details.php?pid=<?= $fetch_product['id']; ?>" style="color:inherit;text-decoration:underline;"><?= $fetch_product['name']; ?></a></div>
       <div class="flex">
          <div class="price"><span>Ksh.</span><?= $fetch_product['price']; ?><span>/-</span></div>
       </div>

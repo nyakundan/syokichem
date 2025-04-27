@@ -1,5 +1,4 @@
 <?php
-// Enable strict typing and error reporting
 declare(strict_types=1);
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -38,7 +37,7 @@ $category_id = (int)$_GET['id'];
 
 // Fetch current category data
 try {
-    $stmt = $conn->prepare("SELECT * FROM categories WHERE id = ?");
+    $stmt = $conn->prepare("SELECT * FROM product_categories WHERE id = ?");
     $stmt->execute([$category_id]);
     $category = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -78,16 +77,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error) {
         try {
             $conn->beginTransaction();
-            
+            error_log("Update params: name=$name, parent_id=" . var_export($parent_id, true) . ", category_id=$category_id");
             $update_stmt = $conn->prepare("
-                UPDATE categories 
-                SET name = ?, parent_id = ?, updated_at = NOW() 
+                UPDATE product_categories 
+                SET name = ?, parent_id = ?
                 WHERE id = ?
             ");
             $update_stmt->execute([$name, $parent_id, $category_id]);
-            
             $conn->commit();
-            
             $_SESSION['flash_message'] = [
                 'type' => 'success',
                 'message' => 'Category updated successfully'
@@ -97,8 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             $conn->rollBack();
             error_log("Update error: " . $e->getMessage());
-            $error = "Failed to update category. Please try again.";
+            $error = "Failed to update category. DB says: " . $e->getMessage();
         }
+    } else {
+        // Prevent redirect, show error message and debug info
+        echo '<div class="alert alert-danger">'.htmlspecialchars($error).'</div>';
     }
 }
 
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $categories_stmt = $conn->query("
         SELECT id, name, parent_id 
-        FROM categories 
+        FROM product_categories 
         WHERE id != $category_id 
         ORDER BY name
     ");
@@ -114,6 +114,20 @@ try {
 } catch (PDOException $e) {
     error_log("Categories fetch error: " . $e->getMessage());
     $categories = [];
+}
+
+// Recursive function for dropdown
+function displayCategories($categories, $parent_id = null, $level = 0, $current_parent = null) {
+    foreach ($categories as $category) {
+        if ($category['parent_id'] == $parent_id) {
+            $selected = ($current_parent == $category['id']) ? 'selected' : '';
+            $indent = str_repeat('&nbsp;&nbsp;', $level);
+            echo "<option value='{$category['id']}' $selected>";
+            echo $indent . htmlspecialchars($category['name']);
+            echo "</option>";
+            displayCategories($categories, $category['id'], $level + 1, $current_parent);
+        }
+    }
 }
 ?>
 
@@ -197,10 +211,7 @@ try {
     </style>
 </head>
 <body>
-    <?php //include ROOT_PATH . 'includes/admin_header.php';
-    include __DIR__ . '/includes/admin_header.php';
-    
-     ?>
+    <?php include ROOT_PATH . 'includes/admin_header.php'; ?>
     
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -212,10 +223,10 @@ try {
                     
                     <div class="card-body">
                         <!-- Error Messages -->
-                        <?php if (isset($error)): ?>
+                        <?php if (isset($error) && $error): ?>
                             <div class="alert alert-danger alert-dismissible fade show mb-4">
                                 <?= htmlspecialchars($error) ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
                         
@@ -242,12 +253,7 @@ try {
                                 <label for="parent_id" class="form-label">Parent Category</label>
                                 <select class="form-select form-select-lg" id="parent_id" name="parent_id">
                                     <option value="">-- No Parent Category --</option>
-                                    <?php foreach ($categories as $cat): ?>
-                                        <option value="<?= (int)$cat['id'] ?>"
-                                            <?= (isset($category['parent_id']) && $cat['id'] == $category['parent_id']) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($cat['name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <?php displayCategories($categories, null, 0, $category['parent_id'] ?? null); ?>
                                 </select>
                             </div>
                             
@@ -266,10 +272,7 @@ try {
         </div>
     </div>
 
-    <?php //include ROOT_PATH . 'includes/admin_footer.php';
-    include __DIR__ . '/includes/admin_footer.php';
-    
-     ?>
+    <?php include ROOT_PATH . 'includes/admin_footer.php'; ?>
     
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

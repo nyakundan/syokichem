@@ -1,54 +1,58 @@
 <?php
 declare(strict_types=1);
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// DEBUG: Log GET data
+file_put_contents(__DIR__ . '/delete_debug.log', print_r($_GET, true), FILE_APPEND);
 
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../components/connect.php';
+require __DIR__ . '/../includes/auth.php';
+require __DIR__ . '/../components/connect.php';
 
-// Check if user is authorized and request method is POST
-if (!isset($_SESSION['admin_id']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $_SESSION['error'] = 'Unauthorized access';
-    header('Location: list.php');
-    exit();
-}
+if (isset($_GET['id'])) {
+    $userId = (int)$_GET['id'];
+    try {
+        $conn->beginTransaction();
 
-// Validate user ID
-if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
-    $_SESSION['error'] = 'Invalid user ID';
-    header('Location: list.php');
-    exit();
-}
+        // Delete related cart records
+        $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Delete related wishlist records
+        $stmt = $conn->prepare("DELETE FROM wishlist WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Delete related user_tokens records
+        $stmt = $conn->prepare("DELETE FROM user_tokens WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        
+        // Optionally check if user exists (optional, can be omitted for parity)
+        $stmt = $conn->prepare("SELECT id FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        if (!$stmt->fetch()) {
+            $conn->rollBack();
+            $_SESSION['flash_message'] = [
+                'type' => 'error',
+                'message' => 'User not found.'
+            ];
+            header('Location: list.php');
+            exit();
+        }
 
-$userId = (int)$_POST['id'];
+        // Delete the user
+        $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $conn->commit();
 
-try {
-    // Check if user exists first
-    $stmt = $conn->prepare("SELECT id FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    
-    if (!$stmt->fetch()) {
-        $_SESSION['error'] = 'User not found';
-        header('Location: list.php');
-        exit();
+        $_SESSION['flash_message'] = [
+            'type' => 'success',
+            'message' => 'User deleted successfully.'
+        ];
+    } catch (PDOException $e) {
+        $conn->rollBack();
+        $_SESSION['flash_message'] = [
+            'type' => 'error',
+            'message' => 'Error deleting user: ' . $e->getMessage()
+        ];
     }
-
-    // Delete the user
-    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    
-    // Check if any rows were affected
-    if ($stmt->rowCount() > 0) {
-        $_SESSION['success'] = 'User deleted successfully';
-    } else {
-        $_SESSION['error'] = 'No user was deleted';
-    }
-    
-} catch (PDOException $e) {
-    error_log("User delete error: " . $e->getMessage());
-    $_SESSION['error'] = 'Failed to delete user.';
 }
 
 header('Location: list.php');

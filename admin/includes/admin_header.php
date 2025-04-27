@@ -20,7 +20,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../components/connect.php'; // Adjusted for live server
 
 // Base URL for admin section
-$base_url = '/ecommerce website/admin/';
+$base_url = '/syokichem/admin/';
 ?>
 <!DOCTYPE html>
 <html lang="en">

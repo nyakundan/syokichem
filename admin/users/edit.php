@@ -9,11 +9,11 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../components/connect.php';
 
 // Check if user is authorized
-if (!isset($_SESSION['admin_id'])) {
-    $_SESSION['error'] = 'Unauthorized access';
-    header('Location: ../login.php');
-    exit();
-}
+//if (!isset($_SESSION['admin_id'])) {
+//    $_SESSION['error'] = 'Unauthorized access';
+//    header('Location: ../login.php');
+//    exit();
+//}
 
 // Get user ID from URL
 $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;

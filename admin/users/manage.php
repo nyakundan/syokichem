@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-require 'C:/xampp/htdocs/ecommerce website/admin/includes/auth.php';
-require 'C:/xampp/htdocs/ecommerce website/admin/components/connect.php';
-//require 'C:/xampp/htdocs/ecommerce website/admin/includes/functions.php';
+require 'C:/xampp/htdocs/syokichem/admin/includes/auth.php';
+require 'C:/xampp/htdocs/syokichem/admin/components/connect.php';
+//require 'C:/xampp/htdocs/syokichem/admin/includes/functions.php';
 
 // Initialize session and verify admin access
 //initSession();
@@ -133,7 +133,7 @@ try {
     <link rel="stylesheet" href="../../assets/css/admin.css">
 </head>
 <body>
-    <?php include 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_header.php';  ?>
+    <?php include 'C:/xampp/htdocs/syokichem/admin/includes/admin_header.php';  ?>
     
     <div class="container py-4">
         <div class="card shadow">
@@ -243,7 +243,7 @@ try {
         </div>
     </div>
 
-    <?php include 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_footer.php'; ?>
+    <?php include 'C:/xampp/htdocs/syokichem/admin/includes/admin_footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/admin.js"></script>

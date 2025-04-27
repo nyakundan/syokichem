@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/connect.php';
-initSession();
-verifyAdminSession();
-verifyAdminRole(['superadmin']);
+
 
 if (!isset($_GET['id'], $_GET['csrf_token'])) {
     redirectWithMessage('manage.php', 'error', 'Invalid request parameters');
@@ -32,18 +30,16 @@ try {
         redirectWithMessage('manage.php', 'error', 'Admin not found');
     }
     
-    // Check if admin has any activity logs
-    $log_stmt = $pdo->prepare("SELECT COUNT(*) FROM admin_logs WHERE admin_id = ?");
-    $log_stmt->execute([$adminId]);
-    $log_count = $log_stmt->fetchColumn();
-    
-    if ($log_count > 0) {
-        redirectWithMessage('manage.php', 'error', 'Cannot delete admin with activity history');
-    }
+    $pdo->beginTransaction();
+
+    // Delete related admin_logs records
+    $pdo->prepare("DELETE FROM admin_logs WHERE admin_id = ?")->execute([$adminId]);
     
     // Delete admin
     $pdo->prepare("DELETE FROM admins WHERE id = ?")->execute([$adminId]);
-    
+
+    $pdo->commit();
+
     // Log this action
     logAdminAction(
         $_SESSION['admin']['id'],
@@ -54,6 +50,7 @@ try {
     redirectWithMessage('manage.php', 'success', 'Admin deleted successfully');
     
 } catch (PDOException $e) {
+    $pdo->rollBack();
     error_log("Admin deletion failed: " . $e->getMessage());
     redirectWithMessage('manage.php', 'error', 'Database error while deleting admin');
 }

@@ -3,9 +3,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../components/connect.php';
 
-
-
-
 // Handle delete action
 if (isset($_GET['delete'])) {
     $delete_id = (int)$_GET['delete'];
@@ -62,20 +59,20 @@ $select_categories = $conn->query("
 ");
 $categories = $select_categories->fetchAll(PDO::FETCH_ASSOC);
 
-// Build category tree for display
-$category_tree = [];
-foreach ($categories as $category) {
-    if ($category['parent_id'] === null) {
-        $category_tree[$category['id']] = $category;
-        $category_tree[$category['id']]['children'] = [];
+// Build full recursive category tree for display
+function buildCategoryTree($elements, $parentId = null) {
+    $branch = [];
+    foreach ($elements as $element) {
+        if ($element['parent_id'] == $parentId) {
+            $children = buildCategoryTree($elements, $element['id']);
+            $element['children'] = $children;
+            $branch[] = $element;
+        }
     }
+    return $branch;
 }
 
-foreach ($categories as $category) {
-    if ($category['parent_id'] !== null && isset($category_tree[$category['parent_id']])) {
-        $category_tree[$category['parent_id']]['children'][] = $category;
-    }
-}
+$category_tree = buildCategoryTree($categories);
 ?>
 
 <!DOCTYPE html>
@@ -89,14 +86,7 @@ foreach ($categories as $category) {
     <link rel="stylesheet" href="../../assets/css/admin.css">
 </head>
 <body>
-    <?php //include 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_header.php';
-    
-    include __DIR__ . '/../includes/admin_header.php';
-
-    
-
-  
-     ?>
+    <?php include __DIR__ . '/../includes/admin_header.php'; ?>
     
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -132,50 +122,26 @@ foreach ($categories as $category) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($category_tree as $parent): ?>
-                                    <tr class="table-primary">
-                                        <td><?= htmlspecialchars((string)$parent['id']) ?></td>
-                                        <td>
-                                            <strong><?= htmlspecialchars($parent['name'] ?? '') ?></strong>
-                                        </td>
-                                        <td>—</td>
-                                        <td>
-                                            <div class="d-flex gap-2">
-                                                <a href="edit.php?id=<?= htmlspecialchars((string)$parent['id']) ?>" class="btn btn-sm btn-warning">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="list.php?delete=<?= htmlspecialchars((string)$parent['id']) ?>" 
-                                                   class="btn btn-sm btn-danger" 
-                                                   onclick="return confirm('Are you sure you want to delete this category?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                    <?php foreach ($parent['children'] as $child): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars((string)$child['id']) ?></td>
-                                            <td class="ps-4">
-                                                <i class="fas fa-level-down-alt me-2"></i>
-                                                <?= htmlspecialchars($child['name'] ?? '') ?>
-                                            </td>
-                                            <td><?= htmlspecialchars($parent['name'] ?? '') ?></td>
-                                            <td>
-                                                <div class="d-flex gap-2">
-                                                    <a href="edit.php?id=<?= htmlspecialchars((string)$child['id']) ?>" class="btn btn-sm btn-warning">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <a href="list.php?delete=<?= htmlspecialchars((string)$child['id']) ?>" 
-                                                       class="btn btn-sm btn-danger" 
-                                                       onclick="return confirm('Are you sure you want to delete this category?')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php endforeach; ?>
+                                <?php
+                                function renderCategoryRows($categories, $parentName = '', $level = 0) {
+                                    foreach ($categories as $category) {
+                                        $indent = str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level);
+                                        echo '<tr'.($level === 0 ? ' class="table-primary"' : '').'>';
+                                        echo '<td>' . htmlspecialchars((string)$category['id']) . '</td>';
+                                        echo '<td>' . $indent . htmlspecialchars($category['name']) . '</td>';
+                                        echo '<td>' . ($parentName ? htmlspecialchars($parentName) : '—') . '</td>';
+                                        echo '<td><div class="d-flex gap-2">';
+                                        echo '<a href="edit.php?id=' . htmlspecialchars((string)$category['id']) . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>';
+                                        echo '<a href="list.php?delete=' . htmlspecialchars((string)$category['id']) . '" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure you want to delete this category?\')"><i class="fas fa-trash"></i></a>';
+                                        echo '</div></td>';
+                                        echo '</tr>';
+                                        if (!empty($category['children'])) {
+                                            renderCategoryRows($category['children'], $category['name'], $level + 1);
+                                        }
+                                    }
+                                }
+                                renderCategoryRows($category_tree);
+                                ?>
                             </tbody>
                         </table>
                     </div>
@@ -184,12 +150,7 @@ foreach ($categories as $category) {
         </div>
     </div>
 
-    <?php //include 'C:/xampp/htdocs/ecommerce website/admin/includes/admin_footer.php';
-
-    
-    include __DIR__ . '/../includes/admin_footer.php';
-    
-     ?>
+    <?php include __DIR__ . '/../includes/admin_footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/admin.js"></script>
