@@ -236,11 +236,13 @@ if (!empty($main_cat_ids)) {
       text-decoration: none;
       margin-right: 2rem;
    }
-   
    .logo-img {
-      height: 5rem;
-      margin-right: 1rem;
+     max-height: 75px; /* or increase further if needed */
+     height: 110px;
+     width: auto;
+     display: block;
    }
+   
    
    .logo-text {
       display: flex;
@@ -983,7 +985,7 @@ if (!empty($main_cat_ids)) {
    <section class="main-header">
       <div class="container">
          <a href="index.php" class="logo">
-            <img src="images/logo.jpeg" alt="Syokichem Logo" class="logo-img">
+            <img src="images/logo.png" alt="Syokichem Logo" class="logo-img">
             <div class="logo-text">
                <span class="main-text">SYOKICHEM</span>
                <span class="sub-text">PHARMACEUTICALS</span>

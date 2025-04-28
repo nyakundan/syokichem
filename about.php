@@ -544,25 +544,57 @@ if(isset($_SESSION['user_id'])){
                </div>
             </div>
             <div class="mission-values white-card">
-               <h2 style="color: var(--primary-green); font-size: 2.2rem; margin: 2.5rem 0 1.5rem 0;">Our Mission & Values</h2>
-               <div class="value-item">
-                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
-                     <i class="fas fa-heart" style="margin-right: 10px; color: var(--secondary);"></i> Customer-Centric Care
-                  </h3>
-                  <p style="color: var(--gray); line-height: 1.7;">We prioritize your health needs with personalized support and transparent communication to build lasting trust.</p>
-               </div>
-               <div class="value-item">
-                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
-                     <i class="fas fa-gem" style="margin-right: 10px; color: var(--secondary);"></i> Integrity & Quality
-                  </h3>
-                  <p style="color: var(--gray); line-height: 1.7;">Upholding the highest ethical standards and ensuring all products meet strict regulatory requirements.</p>
-               </div>
-               <div class="value-item">
-                  <h3 style="color: var(--primary-light); font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center;">
+               <h2 style="color: var(--primary-green); font-size: 2.2rem; margin: 2.5rem 0 1.5rem 0;">Our Core Values</h2>
+               <ul class="core-values-list" style="list-style: none; padding: 0; margin: 0;">
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-user-heart" style="margin-right: 10px; color: var(--secondary);"></i> Customer-Centric Care
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Prioritizing customer needs, ensuring personalized support, and building trust through transparent communication.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-shield-alt" style="margin-right: 10px; color: var(--secondary);"></i> Integrity and Trust
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Upholding the highest ethical standards, ensuring authenticity of medications, and maintaining customer confidentiality.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-universal-access" style="margin-right: 10px; color: var(--secondary);"></i> Accessibility and Convenience
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Providing affordable and timely access to quality medications and healthcare products.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-certificate" style="margin-right: 10px; color: var(--secondary);"></i> Quality Assurance
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Ensuring all products meet regulatory standards, safety protocols, and quality benchmarks.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
                      <i class="fas fa-lightbulb" style="margin-right: 10px; color: var(--secondary);"></i> Innovation
-                  </h3>
-                  <p style="color: var(--gray); line-height: 1.7;">Leveraging technology to enhance your healthcare experience with convenient digital solutions.</p>
-               </div>
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Leveraging technology to improve user experience, streamline delivery processes, and enhance customer satisfaction.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-graduation-cap" style="margin-right: 10px; color: var(--secondary);"></i> Education and Empowerment
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Offering clear, accessible information about medications, usage, and health topics to empower customers to make informed decisions.</p>
+                 </li>
+                 <li class="value-item" style="margin-bottom: 2rem;">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-handshake" style="margin-right: 10px; color: var(--secondary);"></i> Reliability and Accountability
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Being dependable in delivering services and addressing concerns promptly and effectively.</p>
+                 </li>
+                 <li class="value-item">
+                   <h3 style="color: var(--primary-light); font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center;">
+                     <i class="fas fa-hands-holding-heart" style="margin-right: 10px; color: var(--secondary);"></i> Compassion
+                   </h3>
+                   <p style="color: var(--gray); line-height: 1.7;">Understanding the importance of healthcare, showing empathy to customers, and offering respectful support.</p>
+                 </li>
+               </ul>
             </div>
          </div>
       </div>
