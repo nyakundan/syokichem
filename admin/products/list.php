@@ -188,7 +188,7 @@ try {
                             <td><?= htmlspecialchars($product['how_to_use'] ?? '') ?></td>
                             <td><?= htmlspecialchars($product['precautions'] ?? '') ?></td>
                             <td>
-                                <a href="edit.php?id=<?= $product['id'] ?>" class="btn btn-primary btn-sm action-btn"><i class="fas fa-edit"></i> Edit</a>
+                                <a href="update.php?id=<?= $product['id'] ?>" class="btn btn-primary btn-sm action-btn"><i class="fas fa-edit"></i> Edit</a>
                                 <a href="delete.php?id=<?= $product['id'] ?>" class="btn btn-danger btn-sm action-btn" onclick="return confirm('Are you sure you want to delete this product?');"><i class="fas fa-trash"></i> Delete</a>
                             </td>
                         </tr>

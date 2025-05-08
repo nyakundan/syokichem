@@ -172,7 +172,7 @@ input:checked + .slider:before {
         <div class="toggle-group">
             <span>Marketing Communications</span>
             <label class="switch">
-                <input type="checkbox" id="marketingToggle" <?= $prefs['receive_marketing'] ? 'checked' : '' ?>>
+                <input type="checkbox" id="marketingToggle" <?= ($prefs['receive_marketing'] ?? false) ? 'checked' : '' ?>>
                 <span class="slider"></span>
             </label>
         </div>

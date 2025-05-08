@@ -10,9 +10,11 @@ if(isset($_POST['submit_recipient'])){
    $gender = isset($_POST['gender']) ? htmlspecialchars(trim($_POST['gender']), ENT_QUOTES, 'UTF-8') : '';
    $delivery_address = isset($_POST['delivery_address']) ? htmlspecialchars(trim($_POST['delivery_address']), ENT_QUOTES, 'UTF-8') : '';
    $special_instructions = isset($_POST['special_instructions']) ? htmlspecialchars(trim($_POST['special_instructions']), ENT_QUOTES, 'UTF-8') : '';
+   $recipient_email = isset($_POST['recipient_email']) ? htmlspecialchars(trim($_POST['recipient_email']), ENT_QUOTES, 'UTF-8') : '';
+   $recipient_phone = isset($_POST['recipient_phone']) ? htmlspecialchars(trim($_POST['recipient_phone']), ENT_QUOTES, 'UTF-8') : '';
    
    // Validate inputs
-   if(empty($full_name) || empty($date_of_birth) || empty($gender) || empty($delivery_address)){
+   if(empty($full_name) || empty($date_of_birth) || empty($gender) || empty($delivery_address) || empty($recipient_email) || empty($recipient_phone)){
       $message[] = 'Please fill all required fields';
    } else {
       // Store recipient data in session
@@ -21,7 +23,9 @@ if(isset($_POST['submit_recipient'])){
          'date_of_birth' => $date_of_birth,
          'gender' => $gender,
          'delivery_address' => $delivery_address,
-         'special_instructions' => $special_instructions
+         'special_instructions' => $special_instructions,
+         'recipient_email' => $recipient_email,
+         'recipient_phone' => $recipient_phone
       ];
       
       // Redirect to payment page
@@ -428,6 +432,16 @@ if(isset($_POST['submit_recipient'])){
       <div class="form-group">
          <label for="special_instructions">Special Instructions (Optional)</label>
          <textarea name="special_instructions" id="special_instructions" class="form-control" placeholder="Any special delivery instructions, medication preferences, etc."></textarea>
+      </div>
+      
+      <div class="form-group">
+         <label for="recipient_email">Recipient's Email</label>
+         <input type="email" name="recipient_email" id="recipient_email" class="form-control" placeholder="Recipient's email address" required>
+      </div>
+      
+      <div class="form-group">
+         <label for="recipient_phone">Recipient's Phone</label>
+         <input type="text" name="recipient_phone" id="recipient_phone" class="form-control" placeholder="Recipient's phone number" required>
       </div>
       
       <button type="submit" name="submit_recipient" class="btn">

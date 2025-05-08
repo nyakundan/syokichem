@@ -671,6 +671,11 @@ $page_title = "Admin Dashboard";
                                     </a>
                                 </div>
                                 <div class="col-6">
+                                    <a href="/syokichem/admin/supplier/list.php" class="btn btn-info w-100">
+                                        <i class="fas fa-truck me-2"></i> Suppliers
+                                    </a>
+                                </div>
+                                <div class="col-6">
                                     <a href="/syokichem/admin/consultations.php" class="btn btn-secondary w-100">
                                         <i class="fas fa-user-md me-2"></i> Booked Consultations
                                     </a>

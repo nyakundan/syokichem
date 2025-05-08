@@ -63,15 +63,15 @@ include __DIR__ . '/../includes/admin_header.php';
                             <table class="table table-bordered">
                                 <tr>
                                     <th>Name</th>
-                                    <td><?= htmlspecialchars($prescription['patient_name'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($prescription['patient_name'] ?? $prescription['recipient_name'] ?? 'N/A') ?></td>
                                 </tr>
                                 <tr>
                                     <th>Email</th>
-                                    <td><?= htmlspecialchars($prescription['patient_email'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($prescription['patient_email'] ?? $prescription['recipient_email'] ?? 'N/A') ?></td>
                                 </tr>
                                 <tr>
                                     <th>Phone</th>
-                                    <td><?= htmlspecialchars($prescription['patient_phone'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($prescription['patient_phone'] ?? $prescription['recipient_phone'] ?? 'N/A') ?></td>
                                 </tr>
                             </table>
                         </div>

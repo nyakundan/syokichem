@@ -7,6 +7,8 @@ $message = [];
 if(isset($_POST['submit_prescription'])){
    $doctor_name = isset($_POST['doctor_name']) ? htmlspecialchars(trim($_POST['doctor_name']), ENT_QUOTES, 'UTF-8') : '';
    $patient_name = isset($_POST['patient_name']) ? htmlspecialchars(trim($_POST['patient_name']), ENT_QUOTES, 'UTF-8') : '';
+   $patient_email = isset($_POST['patient_email']) ? htmlspecialchars(trim($_POST['patient_email']), ENT_QUOTES, 'UTF-8') : '';
+   $patient_phone = isset($_POST['patient_phone']) ? htmlspecialchars(trim($_POST['patient_phone']), ENT_QUOTES, 'UTF-8') : '';
    $notes = isset($_POST['notes']) ? htmlspecialchars(trim($_POST['notes']), ENT_QUOTES, 'UTF-8') : '';
    
    // Handle file upload
@@ -16,8 +18,8 @@ if(isset($_POST['submit_prescription'])){
    $prescription_error = $_FILES['prescription_file']['error'];
    
    // Validate inputs
-   if(empty($doctor_name) || empty($patient_name)){
-      $message[] = 'Doctor and patient names are required';
+   if(empty($doctor_name) || empty($patient_name) || empty($patient_email) || empty($patient_phone)){
+      $message[] = 'Doctor, patient name, email, and phone are required';
    } elseif($prescription_error !== UPLOAD_ERR_OK){
       $message[] = 'Please upload a valid prescription file';
    } elseif($prescription_size > 2097152){ // 2MB
@@ -44,6 +46,8 @@ if(isset($_POST['submit_prescription'])){
             $_SESSION['prescription_data'] = [
                'doctor_name' => $doctor_name,
                'patient_name' => $patient_name,
+               'patient_email' => $patient_email,
+               'patient_phone' => $patient_phone,
                'notes' => $notes,
                'file_name' => $new_filename
             ];
@@ -411,6 +415,16 @@ if(isset($_POST['submit_prescription'])){
       <div class="form-group">
          <label for="patient_name">Patient's Full Name</label>
          <input type="text" name="patient_name" id="patient_name" class="form-control" placeholder="Your full name" required>
+      </div>
+      
+      <div class="form-group">
+         <label for="patient_email">Patient's Email</label>
+         <input type="email" name="patient_email" id="patient_email" class="form-control" placeholder="Your email address" required>
+      </div>
+      
+      <div class="form-group">
+         <label for="patient_phone">Patient's Phone</label>
+         <input type="text" name="patient_phone" id="patient_phone" class="form-control" placeholder="Your phone number" required>
       </div>
       
       <div class="form-group">

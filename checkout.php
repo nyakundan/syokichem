@@ -78,11 +78,11 @@ if(isset($_POST['order'])){
    <title>Checkout - Syokichem Pharmaceuticals</title>
    <link rel="icon" href="images/favicon.png" type="image/png">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   </style>
    <link rel="stylesheet" href="css/style.css">
    <style>
       /* Your existing CSS styles remain the same */
-        
-   <!-- Custom CSS -->
+   </style>
    <link rel="stylesheet" href="css/style.css">
    
    <!-- Checkout CSS -->

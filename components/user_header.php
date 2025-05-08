@@ -51,16 +51,6 @@ function renderCategoryLevel($categories, $level = 0, $chunkSize = 10) {
         echo '<ul class="' . $ulClass . '" style="list-style:none; margin:0; padding:0; min-width:200px; position:absolute; left:' . $left . '%; top:0; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.08); border-radius:0.6rem; padding:0.5rem 0; z-index:' . (999 + $level + $chunkIdx) . ';">';
         foreach ($chunk as $cat) {
             $hasChildren = !empty($cat['children']);
-            // In the category rendering, ensure links are in the form:
-            // <a href="shop.php?category=ID">Category Name</a>
-            // This is already present in renderCategoryLevel:
-            // echo '<a href="shop.php?category=' . htmlspecialchars($cat['id']) . '" ...>';
-            // No further change needed for link structure.
-            // Optionally, highlight active category (if desired)
-            // You can add a class if $_GET['category'] matches the current category id
-            // Example:
-            // $activeClass = (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active-category' : '';
-            // echo '<a class="' . $activeClass . '" href="shop.php?category=...">...';
             $activeClass = (isset($_GET['category']) && $_GET['category'] == $cat['id']) ? 'active-category' : '';
             echo '<li class="category-item" style="position:relative;">';
             echo '<a class="' . $activeClass . '" href="shop.php?category=' . htmlspecialchars($cat['id']) . '" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#8BC34A;padding:0.7rem 1.2rem;font-weight:500;">' . htmlspecialchars($cat['name']);
@@ -237,7 +227,7 @@ if (!empty($main_cat_ids)) {
       margin-right: 2rem;
    }
    .logo-img {
-     max-height: 75px; /* or increase further if needed */
+     max-height: 80px; /* or increase further if needed */
      height: 110px;
      width: auto;
      display: block;
@@ -801,15 +791,14 @@ if (!empty($main_cat_ids)) {
       position: absolute;
       left: 100%;
       top: 0;
-      min-width: 200px;
+      min-width: 220px;
       background: #fff;
       box-shadow: 0 0 10px rgba(0,0,0,0.08);
       border-radius: 0 0.6rem 0.6rem 0;
       padding: 0.5rem 0;
-      z-index: 1000;
+      z-index: 1001;
       margin-left: 0;
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
+      transform: translateX(0); /* Ensure no extra gap */
    }
 
    /* Mega Menu: Remove gap between main and submenu */
@@ -986,15 +975,12 @@ if (!empty($main_cat_ids)) {
       <div class="container">
          <a href="index.php" class="logo">
             <img src="images/logo.png" alt="Syokichem Logo" class="logo-img">
-            <div class="logo-text">
-               <span class="main-text">SYOKICHEM</span>
-               <span class="sub-text">PHARMACEUTICALS</span>
-            </div>
+            
          </a>
 
          <div class="search-container">
-            <form action="search.php" method="GET" id="headerSearchForm" autocomplete="off">
-               <input type="text" name="query" placeholder="Search medicines, products..." autocomplete="off" required>
+            <form action="search.php" method="GET" id="headerSearchForm" autocomplete="on">
+               <input type="text" name="query" placeholder="Search medicines, products..." autocomplete="on" required>
                <button type="submit" id="headerSearchBtn"><i class="fas fa-search"></i></button>
             </form>
             <div id="searchProcessingMsg" style="display:none; color:#689F38; font-size:1.3rem; margin-top:0.5rem; text-align:center;">Processing...</div>
@@ -1024,22 +1010,40 @@ if (!empty($main_cat_ids)) {
             <li><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
             <li class="mega-menu">
                <a href="javascript:void(0)" class="shop-trigger"><i class="fas fa-pills"></i> Shop By Category <i class="fas fa-chevron-down"></i></a>
-               <div class="mega-menu-content" style="position: absolute; left: 0; width: 380px; background: #fff; box-shadow: 0 1rem 1.5rem rgba(0,0,0,0.1); border-radius: 0.8rem; padding: 0; margin: 0; border: none; z-index: 1000;">
-                  <div class="category-menu-wrapper" style="position:relative;display:flex;flex-direction:column;">
+               <div class="mega-menu-content">
+                  <div class="category-menu-wrapper">
                     <?php foreach ($main_categories_full as $cat): ?>
-                    <div class="main-category-wrap" style="position:relative;display:block;">
-                        <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="main-category-link" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:#8BC34A;padding:1rem 1.2rem;font-weight:600;">
-                            <?= htmlspecialchars($cat['name']) ?>
-                            <?php if (!empty($cat['children'])): ?>
-                                <i class="fas fa-chevron-right" style="margin-left: 0.7rem;"></i>
-                            <?php endif; ?>
+                      <div class="main-category-wrap">
+                        <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="main-category-link">
+                          <?= htmlspecialchars($cat['name']) ?>
+                          <?php if (!empty($cat['children'])): ?>
+                            <i class="fas fa-chevron-right"></i>
+                          <?php endif; ?>
                         </a>
                         <?php if (!empty($cat['children'])): ?>
-                            <div class="category-submenu" style="position:absolute;left:100%;top:0;">
-                                <?php renderCategoryLevel($cat['children'], 1, 10); ?>
-                            </div>
+                          <div class="category-submenu">
+                            <?php foreach ($cat['children'] as $child): ?>
+                              <div class="submenu-item">
+                                <a href="shop.php?category=<?= htmlspecialchars($child['id']) ?>" class="submenu-link">
+                                  <?= htmlspecialchars($child['name']) ?>
+                                  <?php if (!empty($child['children'])): ?>
+                                    <i class="fas fa-chevron-right"></i>
+                                  <?php endif; ?>
+                                </a>
+                                <?php if (!empty($child['children'])): ?>
+                                  <div class="category-submenu sub-submenu">
+                                    <?php foreach ($child['children'] as $grandchild): ?>
+                                      <a href="shop.php?category=<?= htmlspecialchars($grandchild['id']) ?>" class="submenu-link">
+                                        <?= htmlspecialchars($grandchild['name']) ?>
+                                      </a>
+                                    <?php endforeach; ?>
+                                  </div>
+                                <?php endif; ?>
+                              </div>
+                            <?php endforeach; ?>
+                          </div>
                         <?php endif; ?>
-                    </div>
+                      </div>
                     <?php endforeach; ?>
                   </div>
                </div>
@@ -1061,9 +1065,9 @@ if (!empty($main_cat_ids)) {
 <div class="mobile-nav" id="mobileNav">
    <div class="mobile-nav-header">
       <a href="index.php" class="logo">
-         <img src="images/logo.jpeg" alt="Syokichem Logo" class="logo-img" style="height: 4rem;">
+         <img src="images/logo.png" alt="Syokichem Logo" class="logo-img" style="height: 4rem;">
          <div class="logo-text">
-            <span class="main-text">SYOKICHEM</span>
+            
          </div>
       </a>
       <button class="mobile-nav-close" id="mobileNavClose">
@@ -1073,21 +1077,49 @@ if (!empty($main_cat_ids)) {
    
    <ul class="mobile-nav-menu">
       <li class="mobile-nav-item"><a href="index.php" class="mobile-nav-link"><i class="fas fa-home"></i> Home</a></li>
+      <!-- Replace the mobile categories section with the full hierarchy -->
       <li class="mobile-nav-item">
          <a href="javascript:void(0)" class="mobile-nav-link mobile-category-trigger">
             <i class="fas fa-pills"></i> Shop By Category
             <i class="fas fa-chevron-down mobile-submenu-toggle"></i>
          </a>
          <ul class="mobile-submenu">
-            <?php foreach ($main_categories as $cat): ?>
+            <?php foreach ($main_categories_full as $cat): ?>
             <li class="mobile-submenu-item">
-               <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="mobile-submenu-link"><?= htmlspecialchars($cat['name']) ?></a>
-               <?php if (!empty($subcategories_by_parent[$cat['id']])): ?>
+               <?php if (!empty($cat['children'])): ?>
+               <a href="javascript:void(0)" class="mobile-submenu-link mobile-category-trigger">
+                  <?= htmlspecialchars($cat['name']) ?>
+                  <i class="fas fa-chevron-down mobile-submenu-toggle"></i>
+               </a>
                <ul class="mobile-submenu">
-                  <?php foreach ($subcategories_by_parent[$cat['id']] as $subcat): ?>
-                  <li class="mobile-submenu-item"><a href="shop.php?category=<?= htmlspecialchars($subcat['id']) ?>" class="mobile-submenu-link"><?= htmlspecialchars($subcat['name']) ?></a></li>
+                  <?php foreach ($cat['children'] as $child): ?>
+                  <li class="mobile-submenu-item">
+                     <?php if (!empty($child['children'])): ?>
+                     <a href="javascript:void(0)" class="mobile-submenu-link mobile-category-trigger">
+                        <?= htmlspecialchars($child['name']) ?>
+                        <i class="fas fa-chevron-down mobile-submenu-toggle"></i>
+                     </a>
+                     <ul class="mobile-submenu">
+                        <?php foreach ($child['children'] as $grandchild): ?>
+                        <li class="mobile-submenu-item">
+                           <a href="shop.php?category=<?= htmlspecialchars($grandchild['id']) ?>" class="mobile-submenu-link">
+                              <?= htmlspecialchars($grandchild['name']) ?>
+                           </a>
+                        </li>
+                        <?php endforeach; ?>
+                     </ul>
+                     <?php else: ?>
+                     <a href="shop.php?category=<?= htmlspecialchars($child['id']) ?>" class="mobile-submenu-link">
+                        <?= htmlspecialchars($child['name']) ?>
+                     </a>
+                     <?php endif; ?>
+                  </li>
                   <?php endforeach; ?>
                </ul>
+               <?php else: ?>
+               <a href="shop.php?category=<?= htmlspecialchars($cat['id']) ?>" class="mobile-submenu-link">
+                  <?= htmlspecialchars($cat['name']) ?>
+               </a>
                <?php endif; ?>
             </li>
             <?php endforeach; ?>
@@ -1166,6 +1198,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // Ensure the image path is consistent with the upload path in add.php
+  // Update the AJAX search result rendering logic to include product images
   (function(){
     const form = document.getElementById('headerSearchForm');
     const input = form.querySelector('input[name="query"]');
@@ -1173,54 +1207,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsBox = document.getElementById('ajaxSearchResults');
 
     form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const query = input.value.trim();
-      if(!query) {
+        e.preventDefault();
+        const query = input.value.trim();
+        if(!query) {
+            resultsBox.style.display = 'none';
+            return;
+        }
+        processingMsg.style.display = 'block';
+        resultsBox.innerHTML = '';
         resultsBox.style.display = 'none';
-        return;
-      }
-      processingMsg.style.display = 'block';
-      resultsBox.innerHTML = '';
-      resultsBox.style.display = 'none';
-      fetch('ajax_search.php?query=' + encodeURIComponent(query))
-        .then(res => res.json())
-        .then(data => {
-          processingMsg.style.display = 'none';
-          if(data.products && data.products.length > 0) {
-            let html = '<ul style="list-style:none;margin:0;padding:0;">';
-            data.products.forEach(function(p){
-              html += `<li style=\"display:flex;align-items:center;padding:0.7rem 1rem;border-bottom:1px solid #eee;\">
-                <img src='uploaded_img/${p.image_01}' alt='${p.name}' style=\"width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:1rem;\">
-                <div style=\"flex:1;\"><a href='quick_view.php?pid=${p.id}' style=\"font-weight:500;color:#222;text-decoration:none;\">${p.name}</a><br><span style=\"color:#689F38;font-size:1.2rem;\">KSh ${parseFloat(p.price).toLocaleString()}</span></div>
-                <span style=\"margin-left:1rem;font-size:1.1rem;\">${p.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
-              </li>`;
+        fetch('ajax_search.php?query=' + encodeURIComponent(query))
+            .then(res => res.json())
+            .then(data => {
+                processingMsg.style.display = 'none';
+                if(data.products && data.products.length > 0) {
+                    let html = '<ul style="list-style:none;margin:0;padding:0;">';
+                    data.products.forEach(function(p){
+                        html += `<li style="display:flex;align-items:center;padding:0.7rem 1rem;border-bottom:1px solid #eee;">
+                            <img src='images/products/${p.image_01}' alt='${p.name}' style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:1rem;">
+                            <div style="flex:1;"><a href='quick_view.php?pid=${p.id}' style="font-weight:500;color:#222;text-decoration:none;">${p.name}</a><br><span style="color:#689F38;font-size:1.2rem;">KSh ${parseFloat(p.price).toLocaleString()}</span></div>
+                            <span style="margin-left:1rem;font-size:1.1rem;">${p.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    resultsBox.innerHTML = html;
+                    resultsBox.style.display = 'block';
+
+                    // Auto-refresh logic to clear results after a few seconds
+                    setTimeout(() => {
+                        resultsBox.style.display = 'none';
+                        resultsBox.innerHTML = '';
+                    }, 5000); // 5 seconds
+                } else {
+                    resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#888;">No products found.</div>';
+                    resultsBox.style.display = 'block';
+                }
+            })
+            .catch(()=>{
+                processingMsg.style.display = 'none';
+                resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#d32f2f;">Error searching. Try again.</div>';
+                resultsBox.style.display = 'block';
             });
-            html += '</ul>';
-            resultsBox.innerHTML = html;
-            resultsBox.style.display = 'block';
-          } else {
-            resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#888;">No products found.</div>';
-            resultsBox.style.display = 'block';
-          }
-        })
-        .catch(()=>{
-          processingMsg.style.display = 'none';
-          resultsBox.innerHTML = '<div style="padding:1rem;text-align:center;color:#d32f2f;">Error searching. Try again.</div>';
-          resultsBox.style.display = 'block';
-        });
     });
 
     // Hide results on outside click
     document.addEventListener('click', function(e) {
-      if(!form.contains(e.target) && !resultsBox.contains(e.target)) {
-        resultsBox.style.display = 'none';
-      }
+        if(!form.contains(e.target) && !resultsBox.contains(e.target)) {
+            resultsBox.style.display = 'none';
+        }
     });
     // Show results on focus if available
     input.addEventListener('focus', function(){
-      if(resultsBox.innerHTML && resultsBox.innerHTML.trim() !== '') {
-        resultsBox.style.display = 'block';
-      }
+        if(resultsBox.innerHTML && resultsBox.innerHTML.trim() !== '') {
+            resultsBox.style.display = 'block';
+        }
     });
   })();
 });

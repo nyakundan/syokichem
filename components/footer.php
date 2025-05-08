@@ -17,11 +17,11 @@
          <div class="footer-column">
             <h3 class="footer-heading">Shop Categories</h3>
             <ul class="footer-links">
-               <li><a href="category.php?category=prescription"><i class="fas fa-chevron-right"></i> Prescription Medicines</a></li>
-               <li><a href="category.php?category=otc"><i class="fas fa-chevron-right"></i> OTC Products</a></li>
-               <li><a href="category.php?category=mother-baby"><i class="fas fa-chevron-right"></i> Mother & Baby</a></li>
-               <li><a href="category.php?category=wellness"><i class="fas fa-chevron-right"></i> Wellness</a></li>
-               <li><a href="category.php?category=medical-devices"><i class="fas fa-chevron-right"></i> Medical Devices</a></li>
+<?php foreach ($main_categories as $category): ?>
+   <li><a href="shop.php?category=<?= htmlspecialchars($category['id']) ?>">
+      <i class="fas fa-chevron-right"></i> <?= htmlspecialchars($category['name']) ?>
+   </a></li>
+<?php endforeach; ?>
             </ul>
          </div>
 

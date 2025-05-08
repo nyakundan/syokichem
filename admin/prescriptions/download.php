@@ -11,7 +11,7 @@ if (!isset($_GET['file'])) {
 
 // Sanitize the file name to prevent directory traversal attacks
 $file = basename($_GET['file']); // Get the file name safely
-$filePath = __DIR__ . '/../uploads/prescriptions/' . $file; // Construct the full path
+$filePath = __DIR__ . '/../../uploads/prescriptions/' . $file; // Construct the full path
 
 // Use realpath to resolve the absolute path
 $realFilePath = realpath($filePath);

@@ -190,29 +190,29 @@ if(isset($message)){
          <div class="swiper-wrapper">
             <div class="swiper-slide">
                <img src="images/hero-1.jpg" alt="Healthcare Professionals">
-               <div class="content">
+               <!--<div class="content">
                   <h1>Professional Healthcare Solutions</h1>
                   <p>Trusted by healthcare professionals across Kenya</p>
                   <a href="shop.php" class="btn">Shop Now</a>
-               </div>
+               </div>-->
             </div>
             
             <div class="swiper-slide">
                <img src="images/hero-2.jpg" alt="Medicine Delivery">
-               <div class="content">
+               <!--<div class="content">
                   <h1>Fast & Reliable Delivery</h1>
                   <p>Medicines delivered to your doorstep</p>
                   <a href="shop.php" class="btn">Shop Now</a>
-               </div>
+               </div>-->
             </div>
             
             <div class="swiper-slide">
                <img src="images/hero-3.jpeg" alt="Online Consultation">
-               <div class="content">
+               <!--<div class="content">
                   <h1>Online Consultation Services</h1>
                   <p>Connect with healthcare professionals</p>
                   <a href="telemedicine.php" class="btn">Book Now</a>
-               </div>
+               </div>-->
             </div>
          </div>
          
@@ -294,6 +294,7 @@ if(isset($message)){
 
 
 <!-- Two Column Advert Section -->
+<!--
 <div class="advert-banner">
    <div class="container">
       <div class="banner-content">
@@ -308,6 +309,7 @@ if(isset($message)){
       </div>
    </div>
 </div>
+-->
 
 
 <!-- New on Syokichem Section -->

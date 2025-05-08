@@ -62,7 +62,11 @@ function get_discount_percent($old, $new) {
             <?php foreach ($offers as $offer): ?>
                 <div class="offer-card">
                     <img src="images/products/<?= htmlspecialchars($offer['image_01']) ?>" alt="<?= htmlspecialchars($offer['name']) ?>">
-                    <div class="offer-title"><?= htmlspecialchars($offer['name']) ?></div>
+                    <div class="offer-title">
+                        <a href="product_details.php?pid=<?= $offer['id'] ?>" style="text-decoration: none; color: inherit;">
+                            <?= htmlspecialchars($offer['name']) ?>
+                        </a>
+                    </div>
                     <div class="offer-pricing">
                         <span class="old-price">KSh <?= number_format($offer['old_price'], 2) ?></span>
                         <span class="new-price">KSh <?= number_format($offer['new_price'], 2) ?></span>

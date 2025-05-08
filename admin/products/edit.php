@@ -193,16 +193,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-    <?php
-    // Debug output for formData and suppliers
-    echo '<pre style="background:#fff;color:#000;z-index:9999;position:relative;">';
-    var_dump($formData);
-    echo "\n";
-    if (isset($suppliers)) var_dump($suppliers);
-    echo '</pre>';
+    <?php // Debug output for formData and suppliers
+    // echo '<pre style="background:#fff;color:#000;z-index:9999;position:relative;">';
+    // var_dump($formData);
+    // echo "\n";
+    // if (isset($suppliers)) var_dump($suppliers);
+    // echo '</pre>';
     ?>
-    <form method="POST" class="form-container">
-        <div class="form-row">
+    <form method="POST" enctype="multipart/form-data" class="form-container">
+        <div class="row">
             <div class="form-group col-md-6">
                 <label for="name" class="form-label required">Product Name</label>
                 <input type="text" class="form-control" id="name" name="name" value="<?= htmlspecialchars($formData['name']) ?>" required>
@@ -212,7 +211,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" class="form-control" id="slug" name="slug" value="<?= htmlspecialchars($formData['slug']) ?>">
             </div>
         </div>
-        <div class="form-row">
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="category_id" class="form-label required">Category</label>
+                <select class="form-select" id="category_id" name="category_id" required>
+                    <option value="">Select Category</option>
+                    <?php
+                    function renderCategoryOptions($categories, $prefix = '', $selectedId = null) {
+                        foreach ($categories as $cat) {
+                            if (!empty($cat['children'])) {
+                                echo '<optgroup label="' . htmlspecialchars($cat['name']) . '">';
+                                renderCategoryOptions($cat['children'], '&nbsp;&nbsp;&nbsp;', $selectedId);
+                                echo '</optgroup>';
+                            } else {
+                                $selected = $selectedId == $cat['id'] ? 'selected' : '';
+                                echo '<option value="' . $cat['id'] . '" ' . $selected . '>' . $prefix . htmlspecialchars($cat['name']) . '</option>';
+                            }
+                        }
+                    }
+                    renderCategoryOptions($category_tree, '', $formData['category_id'] ?? null);
+                    ?>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="supplier_id" class="form-label">Supplier</label>
+                <select class="form-select" id="supplier_id" name="supplier_id">
+                    <option value="">Select Supplier</option>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <option value="<?= $supplier['id'] ?>" <?= $formData['supplier_id'] == $supplier['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($supplier['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="row">
             <div class="form-group col-md-4">
                 <label for="price" class="form-label required">Selling Price</label>
                 <div class="input-group">
@@ -229,80 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="number" class="form-control" id="max_quantity" name="max_quantity" min="1" value="<?= htmlspecialchars($formData['max_quantity']) ?>">
             </div>
         </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="sales" class="form-label">Sales</label>
-                <input type="number" class="form-control" id="sales" name="sales" min="0" value="<?= htmlspecialchars((string)$formData['sales']) ?>">
-            </div>
-            <div class="form-group col-md-6">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="active" <?= $formData['status']==='active'?'selected':'' ?>>Active</option>
-                    <option value="inactive" <?= $formData['status']==='inactive'?'selected':'' ?>>Inactive</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="category_id" class="form-label required">Category</label>
-                <input type="hidden" name="category" value="<?= htmlspecialchars($formData['category']) ?>">
-                <select class="form-select" id="category_id" name="category_id" required>
-                    <option value="">Select Category</option>
-                    <option value="10" <?= $formData['category_id']==10?'selected':'' ?>>Test Category</option>
-                </select>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" id="description" name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="supplier_id" class="form-label">Supplier</label>
-                <select class="form-select" id="supplier_id" name="supplier_id">
-                    <option value="">Select Supplier</option>
-                    <?php foreach ($suppliers as $supplier): ?>
-                        <option value="<?= $supplier['id'] ?>" <?= $formData['supplier_id'] == $supplier['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($supplier['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="requires_prescription" class="form-label">Requires Prescription</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription" <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="requires_prescription">Yes</label>
-                </div>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="manufacturer" class="form-label">Manufacturer</label>
-                <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="<?= htmlspecialchars($formData['manufacturer']) ?>">
-            </div>
-            <div class="form-group col-md-6">
-                <label for="ingredients" class="form-label">Ingredients</label>
-                <textarea class="form-control" id="ingredients" name="ingredients"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="dosage" class="form-label">Dosage</label>
-                <textarea class="form-control" id="dosage" name="dosage"><?= htmlspecialchars($formData['dosage']) ?></textarea>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="how_to_use" class="form-label">How to Use</label>
-                <textarea class="form-control" id="how_to_use" name="how_to_use"><?= htmlspecialchars($formData['how_to_use']) ?></textarea>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="precautions" class="form-label">Precautions</label>
-                <textarea class="form-control" id="precautions" name="precautions"><?= htmlspecialchars($formData['precautions']) ?></textarea>
-            </div>
-        </div>
-        <div class="form-row">
+        <div class="row">
             <div class="form-group col-md-4">
                 <label for="image_01" class="form-label">Image 1</label>
                 <input type="file" class="form-control" id="image_01" name="image_01" accept="image/*">
@@ -331,7 +291,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
-        <div class="form-row">
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="sales" class="form-label">Sales</label>
+                <input type="number" class="form-control" id="sales" name="sales" min="0" value="<?= htmlspecialchars((string)$formData['sales']) ?>">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="active" <?= $formData['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                    <option value="inactive" <?= $formData['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="category" class="form-label">Category (Text)</label>
+                <input type="text" class="form-control" id="category" name="category" value="<?= htmlspecialchars($formData['category']) ?>">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description"><?= htmlspecialchars($formData['description']) ?></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="ingredients" class="form-label">Ingredients</label>
+                <textarea class="form-control" id="ingredients" name="ingredients"><?= htmlspecialchars($formData['ingredients']) ?></textarea>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="dosage" class="form-label">Dosage</label>
+                <textarea class="form-control" id="dosage" name="dosage"><?= htmlspecialchars($formData['dosage']) ?></textarea>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="manufacturer" class="form-label">Manufacturer</label>
+                <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="<?= htmlspecialchars($formData['manufacturer']) ?>">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="requires_prescription" class="form-label">Requires Prescription</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription" <?= $formData['requires_prescription'] ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="requires_prescription">Yes</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-6">
+                <label for="how_to_use" class="form-label">How to Use</label>
+                <textarea class="form-control" id="how_to_use" name="how_to_use"><?= htmlspecialchars($formData['how_to_use']) ?></textarea>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="precautions" class="form-label">Precautions</label>
+                <textarea class="form-control" id="precautions" name="precautions"><?= htmlspecialchars($formData['precautions']) ?></textarea>
+            </div>
+        </div>
+        <div class="row">
             <div class="d-flex justify-content-end">
                 <button type="submit" class="btn btn-primary px-4">
                     <i class="fas fa-save me-2"></i>Update Product
@@ -342,5 +358,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include __DIR__ . '/../includes/admin_footer.php'; ?>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Image preview functionality
+['01','02','03'].forEach(function(num) {
+    document.getElementById('image_' + num)?.addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview' + num);
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" alt="Preview">`;
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+});
+</script>
 </body>
 </html>

@@ -52,7 +52,7 @@ $stockHistory->execute([$productId]);
         <div class="page-header">
             <h1>Product Details</h1>
             <div class="actions">
-                <a href="edit.php?id=<?= $product['id'] ?>" class="btn btn-edit">Edit</a>
+                <a href="update.php?id=<?= $product['id'] ?>" class="btn btn-edit">Edit</a>
                 <a href="manage.php" class="btn btn-back">Back to List</a>
             </div>
         </div>

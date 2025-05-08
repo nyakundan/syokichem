@@ -614,3 +614,68 @@ POST: Array
 )
 
 
+2025-05-04 16:06:37
+POST: Array
+(
+    [pid] => 21
+    [name] => Glucometer (Blood Glucose Monitor)
+    [price] => 3500.00
+    [image] => 680d943d9a4c8_glucometer.jpg
+    [add_to_cart] => 1
+)
+
+
+2025-05-08 12:14:03
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 2
+)
+
+
+2025-05-08 12:14:09
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 3
+)
+
+
+2025-05-08 12:14:11
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 4
+)
+
+
+2025-05-08 12:14:16
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 5
+)
+
+
+2025-05-08 12:14:17
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 6
+)
+
+
+2025-05-08 12:14:19
+POST: Array
+(
+    [action] => update_qty
+    [cart_id] => 19
+    [qty] => 7
+)
+
+

@@ -22,29 +22,37 @@ if(isset($_POST['confirm_order'])){
    try {
       // Begin transaction
       $conn->beginTransaction();
-      // Remove the temp file moving logic and replace with:
-$perm_path = 'uploads/prescriptions/' . $prescription_data['file_name'];
-
-// Verify the file exists in the permanent location
-if (!file_exists($perm_path)) {
-    throw new Exception('Prescription file not found at: ' . $perm_path);
-}
-
-// Proceed directly to database insertion since file is already in place
-$insert_order = $conn->prepare("INSERT INTO `prescriptions` 
-    (user_id, doctor_name, patient_name, prescription_file, notes, 
-    recipient_name, recipient_dob, recipient_gender, delivery_address, special_instructions,
-    payment_method, insurance_provider, insurance_number, status, created_at) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
       
+      // Move file from temp to permanent location if needed
+      $temp_path = 'uploads/prescriptions/temp/' . $prescription_data['file_name'];
+      $perm_path = 'uploads/prescriptions/' . $prescription_data['file_name'];
+      if (file_exists($temp_path)) {
+         if (!rename($temp_path, $perm_path)) {
+            throw new Exception('Failed to move prescription file from temp to permanent location.');
+         }
+      }
+      // Verify the file exists in the permanent location
+      if (!file_exists($perm_path)) {
+          throw new Exception('Prescription file not found at: ' . $perm_path);
+      }
+      // Proceed directly to database insertion since file is already in place
+      $insert_order = $conn->prepare("INSERT INTO `prescriptions` 
+          (user_id, doctor_name, patient_name, patient_email, patient_phone, prescription_file, notes, 
+          recipient_name, recipient_email, recipient_phone, recipient_dob, recipient_gender, delivery_address, special_instructions,
+          payment_method, insurance_provider, insurance_number, status, created_at) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
       
       $insert_order->execute([
          $user_id,
          $prescription_data['doctor_name'],
          $prescription_data['patient_name'],
+         $prescription_data['patient_email'],
+         $prescription_data['patient_phone'],
          $prescription_data['file_name'],
          $prescription_data['notes'],
          $recipient_data['full_name'],
+         $recipient_data['recipient_email'],
+         $recipient_data['recipient_phone'],
          $recipient_data['date_of_birth'],
          $recipient_data['gender'],
          $recipient_data['delivery_address'],
@@ -430,6 +438,14 @@ $formatted_dob = $dob->format('F j, Y');
             <div class="summary-label">Patient's Name:</div>
             <div class="summary-value"><?= htmlspecialchars($_SESSION['prescription_data']['patient_name']) ?></div>
          </div>
+         <div class="summary-row">
+            <div class="summary-label">Patient Email:</div>
+            <div class="summary-value"><?= htmlspecialchars($_SESSION['prescription_data']['patient_email']) ?></div>
+         </div>
+         <div class="summary-row">
+            <div class="summary-label">Patient Phone:</div>
+            <div class="summary-value"><?= htmlspecialchars($_SESSION['prescription_data']['patient_phone']) ?></div>
+         </div>
          <?php if(!empty($_SESSION['prescription_data']['notes'])): ?>
          <div class="summary-row">
             <div class="summary-label">Notes:</div>
@@ -471,6 +487,14 @@ $formatted_dob = $dob->format('F j, Y');
          <div class="summary-row">
             <div class="summary-label">Delivery Address:</div>
             <div class="summary-value"><?= htmlspecialchars($recipient_data['delivery_address']) ?></div>
+         </div>
+         <div class="summary-row">
+            <div class="summary-label">Recipient Email:</div>
+            <div class="summary-value"><?= htmlspecialchars($recipient_data['recipient_email']) ?></div>
+         </div>
+         <div class="summary-row">
+            <div class="summary-label">Recipient Phone:</div>
+            <div class="summary-value"><?= htmlspecialchars($recipient_data['recipient_phone']) ?></div>
          </div>
          <?php if(!empty($recipient_data['special_instructions'])): ?>
          <div class="summary-row">

@@ -165,7 +165,7 @@ if(isset($message)){
       <input type="hidden" name="qty" value="1">
       <a href="quick_view.php?pid=<?= $fetch_product['id']; ?>" class="fas fa-eye"></a>
       <img src="images/products/<?= $fetch_product['image_01']; ?>" alt="<?= htmlspecialchars($fetch_product['name']); ?>">
-      <div class="name"><a href="product_details.php?pid=<?= $fetch_product['id']; ?>" style="color:inherit;text-decoration:underline;"><?= $fetch_product['name']; ?></a></div>
+      <div class="name"><a href="product_details.php?pid=<?= $fetch_product['id']; ?>" style="color:inherit;text-decoration:none;"><?= $fetch_product['name']; ?></a></div>
       <div class="flex">
          <div class="price"><span>Ksh.</span><?= $fetch_product['price']; ?><span>/-</span></div>
       </div>

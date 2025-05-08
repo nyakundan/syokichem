@@ -77,9 +77,9 @@ $recent_orders->execute([$user_id, $user_id]);
    <!-- Dashboard CSS -->
    <style>
    :root {
-      --primary: #4361ee;
-      --primary-light: #3f37c9;
-      --secondary: #3a0ca3;
+      --primary: #8BC34A; /* Changed to primary green */
+      --primary-light: #DCEDC8; /* Changed to light green */
+      --secondary: #689F38; /* Changed to dark green */
       --success: #4cc9f0;
       --danger: #f72585;
       --warning: #f8961e;
@@ -117,6 +117,22 @@ $recent_orders->execute([$user_id, $user_id]);
       border-radius: 8px;
       padding: 0.75rem 1.5rem;
       transition: all 0.2s ease;
+   }
+
+   .btn {
+      background: var(--primary);
+      color: var(--white);
+      transition: all 0.2s ease;
+   }
+
+   .btn:hover {
+      background: var(--secondary);
+   }
+
+   .btn-view:hover {
+      background: var(--secondary);
+      color: var(--white);
+      transform: translateY(-2px);
    }
 
    .dashboard-title, .section-title {
@@ -223,7 +239,7 @@ $recent_orders->execute([$user_id, $user_id]);
    }
 
    .sidebar-menu a:hover, .sidebar-menu a.active {
-      background: rgba(67, 97, 238, 0.1);
+      background: rgba(139, 195, 74, 0.1);
       color: var(--primary);
    }
 
@@ -267,7 +283,7 @@ $recent_orders->execute([$user_id, $user_id]);
    }
 
    .stat-icon.orders {
-      background: rgba(67, 97, 238, 0.1);
+      background: rgba(139, 195, 74, 0.1);
       color: var(--primary);
    }
 
@@ -367,7 +383,7 @@ $recent_orders->execute([$user_id, $user_id]);
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
-      background: rgba(67, 97, 238, 0.1);
+      background: rgba(139, 195, 74, 0.1);
       color: var(--primary);
       margin-bottom: 0.5rem;
    }
@@ -390,7 +406,8 @@ $recent_orders->execute([$user_id, $user_id]);
    }
 
    .btn-view:hover {
-      background: var(--primary-light);
+      background: var(--secondary);
+      color: var(--white);
       transform: translateY(-2px);
    }
 
@@ -463,6 +480,10 @@ $recent_orders->execute([$user_id, $user_id]);
       gap: 0.3rem;
    }
 
+   .action-link:hover {
+      color: var(--secondary);
+   }
+
    @media (max-width: 1024px) {
       .dashboard-grid {
          grid-template-columns: 1fr;
@@ -507,7 +528,7 @@ $recent_orders->execute([$user_id, $user_id]);
    <div class="dashboard-header">
       <div>
          <h1 class="dashboard-title">Dashboard</h1>
-         <p class="welcome-message">Welcome back, <strong><?= htmlspecialchars($fetch_profile['name']); ?></strong></p>
+         <p class="welcome-message">Welcome back, <strong><?= htmlspecialchars($fetch_profile['name'] ?? 'User'); ?></strong></p>
       </div>
       <div>
          <a href="update_profile.php" class="btn">Edit Profile</a>
@@ -517,9 +538,14 @@ $recent_orders->execute([$user_id, $user_id]);
    <div class="dashboard-grid">
       <aside class="dashboard-sidebar">
          <div class="user-profile">
-            <img src="uploaded_img/<?= htmlspecialchars($fetch_profile['image']); ?>" class="user-avatar" alt="Profile Image">
-            <h3 class="user-name"><?= htmlspecialchars($fetch_profile['name']); ?></h3>
-            <p class="user-email"><?= htmlspecialchars($fetch_profile['email']); ?></p>
+            <?php if (!empty($fetch_profile['image']) && file_exists('uploaded_img/' . $fetch_profile['image'])): ?>
+               <img src="uploaded_img/<?= htmlspecialchars($fetch_profile['image']); ?>" class="user-avatar" alt="Profile Image">
+            <?php else: ?>
+               <img src="images/default-avatar.jpg" class="user-avatar" alt="Default Profile Image">
+            <?php endif; ?>
+            
+            <h3 class="user-name"><?= htmlspecialchars($fetch_profile['name'] ?? 'User'); ?></h3>
+            <p class="user-email"><?= htmlspecialchars($fetch_profile['email'] ?? ''); ?></p>
          </div>
 
          <ul class="sidebar-menu">

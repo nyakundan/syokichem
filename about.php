@@ -15,10 +15,10 @@ if(isset($_SESSION['user_id'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>About Us - Syokichem Pharmaceuticals | Trusted Online Pharmacy Kenya</title>
+   <title>About Us - Syokichem Pharmaceuticals | Kenya's No.1 Reliable Online Pharmacy</title>
 
    <!-- SEO Meta Tags -->
-   <meta name="description" content="Learn about Syokichem Pharmaceuticals - Kenya's trusted online pharmacy with licensed pharmacists and genuine medicines.">
+   <meta name="description" content="Learn about Syokichem Pharmaceuticals - Kenya's  No.1 Reliable Online pharmacy with licensed pharmacists and genuine medicines.">
    <meta name="keywords" content="online pharmacy Kenya, prescription drugs, healthcare products, licensed pharmacists, Syokimau pharmacy, Katani Road pharmacy">
    <meta name="author" content="Syokichem Pharmaceuticals">
 
